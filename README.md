@@ -43,9 +43,13 @@ The plugin ships one skill of its own, plus one MCP server.
 > **Before `phx-dbexplorer` will work**, you must set `PHX_DB_TYPE`,
 > `PHX_DB_CONNECTION_STRING`, and optionally `PHX_DB_SCHEMA_FILTER` in your own
 > shell environment — these are per-developer database credentials and are
-> never shipped with the plugin. See the
-> [usage guide's Plugin catalog](docs/USAGE.md#plugin-catalog) for the full
-> variable table.
+> never shipped with the plugin. `PHX_DB_TYPE` must be exactly `mssql` or
+> `postgres` (aliases `sqlserver`/`postgresql` also work) — anything else,
+> e.g. `MSSQLDB`, is rejected and the MCP server fails to start, which shows
+> up in `/mcp` as a bare reconnect error. Restart Claude Code after setting
+> or changing these — an already-running session won't pick up the new
+> values. See the [usage guide's Plugin catalog](docs/USAGE.md#plugin-catalog)
+> for the full variable table.
 
 We do not bundle third-party *plugins* as `dependencies` — Claude Code only auto-resolves a
 cross-marketplace dependency if the user has already added that dependency's marketplace,
