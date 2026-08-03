@@ -17,8 +17,7 @@ and the plugins it distributes (`plugins/`).
 ├── plugins/
 │   └── org-standards/            # One plugin
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 1.1.0 — see Versioning). Also
-│       │                         # declares `dependencies` on third-party skill plugins.
+│       │   └── plugin.json       # Manifest (version: 2.0.0 — see Versioning)
 │       ├── skills/
 │       │   └── hrm_sql_standards/
 │       │       └── SKILL.md       # The one skill this plugin ships itself
@@ -33,23 +32,16 @@ and the plugins it distributes (`plugins/`).
 
 ## What's in `org-standards`
 
-The plugin ships one skill of its own, plus 15 third-party skill plugins pulled in as
-`dependencies` — installing `org-standards` installs all of it in one shot, and the
-dependencies always track their upstream marketplace's latest release (no vendoring, no
-manual re-sync).
+The plugin ships one skill of its own.
 
 | Source | Skill(s) | Notes |
 | --- | --- | --- |
 | **This repo (own skill)** | `hrm_sql_standards` | PHR-specific: reformat/scaffold HRM-DB MSSQL deployment SQL, **.NET Framework only**. |
-| [obra/superpowers](https://github.com/obra/superpowers) (`superpowers`) | TDD, systematic debugging, brainstorming, code-review/collaboration workflows | Dependency, marketplace `superpowers-dev`. |
-| [dotnet/skills](https://github.com/dotnet/skills) (`dotnet`, `dotnet-advanced`, `dotnet-data`, `dotnet-diag`, `dotnet-nuget`, `dotnet-upgrade`, `dotnet-maui`, `dotnet-ai`, `dotnet-template-engine`, `dotnet-test`, `dotnet-test-migration`, `dotnet-aspnetcore`, `dotnet-blazor`, `dotnet11`) | General .NET/C# development, testing, upgrades, ASP.NET Core, Blazor, MAUI, package management | Dependency, marketplace `dotnet-agent-skills`. `dotnet-msbuild` was deliberately excluded — it bundles an MCP server, which conflicts with this repo's skills-only rule. |
 
-Both external marketplaces are allowlisted in `.claude-plugin/marketplace.json` via
-`allowCrossMarketplaceDependenciesOn` — required for a cross-marketplace dependency to
-resolve at all. See [`CLAUDE.md`](CLAUDE.md#third-party-skill-dependencies) for the
-maintainer-facing rules on adding more (what disqualifies a candidate, e.g. bundled MCP
-servers or non-installable skills), and
-[`docs/USAGE.md`](docs/USAGE.md#plugin-catalog) for the user-facing catalog.
+We do not bundle third-party plugins as `dependencies` — Claude Code only auto-resolves a
+cross-marketplace dependency if the user has already added that dependency's marketplace,
+so it isn't a true one-shot install and just pushes extra `marketplace add` commands onto
+users anyway. See [`CLAUDE.md`](CLAUDE.md#rules) for the rule against re-adding this.
 
 ## Install from this repository
 
@@ -94,7 +86,7 @@ add it to that project's `.claude/settings.json`:
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (currently
-`1.1.0`). Claude Code resolves a plugin's version from the first of these that
+`2.0.0`). Claude Code resolves a plugin's version from the first of these that
 is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**

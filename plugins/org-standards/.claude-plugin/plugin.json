@@ -1,27 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "org-standards",
-  "version": "1.1.0",
-  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects, plus curated third-party skill plugins for general Claude Code workflows and .NET development.",
+  "version": "2.0.0",
+  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
-  },
-  "dependencies": [
-    { "name": "superpowers", "marketplace": "superpowers-dev" },
-    { "name": "dotnet", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-advanced", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-data", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-diag", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-nuget", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-upgrade", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-maui", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-ai", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-template-engine", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-test", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-test-migration", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-aspnetcore", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet-blazor", "marketplace": "dotnet-agent-skills" },
-    { "name": "dotnet11", "marketplace": "dotnet-agent-skills" }
-  ]
+  }
 }
