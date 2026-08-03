@@ -7,6 +7,11 @@ the marketplace itself.
 > **Keep this page current.** When a plugin or skill is added, renamed, or
 > removed, update the [Plugin catalog](#plugin-catalog) below in the same PR.
 
+Repo layout note: the empty Azure template dirs `deps/`, `scripts/`, and `src/`
+have been removed from the repo — they held nothing but placeholder READMEs.
+`docs/` (this guide) is the only one that remains, since it holds real content.
+See the [root README](../README.md#repository-layout) for the current layout.
+
 ---
 
 ## 1. Install

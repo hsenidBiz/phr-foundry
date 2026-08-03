@@ -26,10 +26,9 @@ and the plugins it distributes (`plugins/`).
 ├── .github/
 │   └── workflows/
 │       └── validate.yml          # CI: runs `claude plugin validate .` on PRs into main
-├── deps/                         # (Azure repo template dirs — reserved)
-├── docs/
-├── scripts/
-└── src/
+└── docs/
+    ├── README.md                 # (Azure repo template file — reserved)
+    └── USAGE.md                  # User-facing install/update/usage guide
 ```
 
 ## What's in `org-standards`
