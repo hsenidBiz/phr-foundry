@@ -183,14 +183,28 @@ Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer
 `npx -y github:hsenidBiz/phx-dbexplorer` the first time you use a tool that
 needs it, and it needs your database credentials to do anything.
 
-**Before it will work**, set these in your own shell profile (never commit
-them anywhere — `CONNECTION_STRING` carries your DB password):
+**You must set these yourself before it will work** — the plugin ships
+`plugin.json` wired to read them from your own shell environment, it does not
+supply values for you. Set them in your shell profile, never commit them
+anywhere (`PHX_DB_CONNECTION_STRING` carries your DB password), and restart
+Claude Code afterward so it picks up the new values:
 
 | Variable | Required | Description |
 | --- | --- | --- |
 | `PHX_DB_TYPE` | Yes | `mssql` or `postgres` |
 | `PHX_DB_CONNECTION_STRING` | Yes | Full connection string for your target database |
 | `PHX_DB_SCHEMA_FILTER` | No | Comma-separated schemas to expose (default: `dbo` for SQL Server, `public` for Postgres) |
+
+Example (adjust the connection string to your own database):
+
+```shell
+export PHX_DB_TYPE=mssql
+export PHX_DB_CONNECTION_STRING="Server=localhost,1433;Database=MyDb;User Id=sa;Password=YourPassword;TrustServerCertificate=True;"
+export PHX_DB_SCHEMA_FILTER=dbo,hr
+```
+
+On Windows (PowerShell), use `$env:PHX_DB_TYPE = "mssql"` etc. instead, or set
+them permanently via System Properties → Environment Variables.
 
 First use downloads a self-contained binary for your OS/arch to
 `~/.cache/phx-dbexplorer-mcp/<version>/` — no .NET SDK or runtime needed.

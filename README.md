@@ -38,7 +38,14 @@ The plugin ships one skill of its own, plus one MCP server.
 | Source | Skill(s) / MCP server | Notes |
 | --- | --- | --- |
 | **This repo (own skill)** | `hrm_sql_standards` | PHR-specific: reformat/scaffold HRM-DB MSSQL deployment SQL, **.NET Framework only**. |
-| **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a .NET project, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use. |
+| **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a **public** .NET repo, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use (the repo must stay public — the download is unauthenticated). |
+
+> **Before `phx-dbexplorer` will work**, you must set `PHX_DB_TYPE`,
+> `PHX_DB_CONNECTION_STRING`, and optionally `PHX_DB_SCHEMA_FILTER` in your own
+> shell environment — these are per-developer database credentials and are
+> never shipped with the plugin. See the
+> [usage guide's Plugin catalog](docs/USAGE.md#plugin-catalog) for the full
+> variable table.
 
 We do not bundle third-party *plugins* as `dependencies` — Claude Code only auto-resolves a
 cross-marketplace dependency if the user has already added that dependency's marketplace,
