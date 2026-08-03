@@ -5,6 +5,7 @@
     "email": "sanuja.a@peopleshr.com"
   },
   "description": "PeoplesHR internal Claude Code marketplace. Distributes organization standards and tooling to engineering teams.",
+  "allowCrossMarketplaceDependenciesOn": ["superpowers-dev", "dotnet-agent-skills"],
   "plugins": [
     {
       "name": "org-standards",

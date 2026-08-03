@@ -22,6 +22,17 @@ claude plugin install org-standards@phr-foundry
 The same commands work as slash commands inside a Claude Code session
 (`/plugin marketplace add ...`, `/plugin install ...`).
 
+`org-standards` also depends on 15 curated third-party skill plugins (see the
+[Plugin catalog](#plugin-catalog) below), which install automatically alongside it. If any
+show up as missing after install, their upstream marketplace probably isn't registered on
+your machine yet — add it and reinstall:
+
+```shell
+claude plugin marketplace add https://github.com/obra/superpowers
+claude plugin marketplace add https://github.com/dotnet/skills
+claude plugin install org-standards@phr-foundry
+```
+
 **If the first command hangs or fails on authentication**, your machine has no
 cached GitHub credentials. Use the URL with the account prefix so Git knows
 which account to prompt for:
@@ -85,6 +96,16 @@ claude plugin uninstall org-standards
 | Skill | Use it for |
 | --- | --- |
 | `hrm_sql_standards` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
+
+`org-standards` also pulls in these third-party plugins as dependencies, so they're
+available as soon as `org-standards` is installed — no separate install step. They track
+their upstream marketplace directly, so you get updates whenever the upstream maintainer
+ships one; PHR-Foundry doesn't vendor or re-host their content.
+
+| Plugin | Source | Use it for |
+| --- | --- | --- |
+| `superpowers` | [obra/superpowers](https://github.com/obra/superpowers) | TDD, systematic debugging, brainstorming, and code-review/collaboration workflow skills. |
+| `dotnet`, `dotnet-advanced`, `dotnet-data`, `dotnet-diag`, `dotnet-nuget`, `dotnet-upgrade`, `dotnet-maui`, `dotnet-ai`, `dotnet-template-engine`, `dotnet-test`, `dotnet-test-migration`, `dotnet-aspnetcore`, `dotnet-blazor`, `dotnet11` | [dotnet/skills](https://github.com/dotnet/skills) | General .NET/C# development, testing, upgrades, ASP.NET Core, Blazor, MAUI, and package-management skills. |
 
 #### What `hrm_sql_standards` does
 
