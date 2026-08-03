@@ -1,12 +1,12 @@
 # PHR-Foundry
 
-Internal Claude Code **plugin marketplace** for **PeoplesHR**, hosted on Azure DevOps.
+Internal Claude Code **plugin marketplace** for **PeoplesHR**, hosted on GitHub.
 This repository holds both the marketplace catalog (`.claude-plugin/marketplace.json`)
 and the plugins it distributes (`plugins/`).
 
 - **Marketplace name:** `phr-foundry`
 - **Owner:** PeoplesHR &lt;sanuja.a@peopleshr.com&gt;
-- **Repo:** `https://dev.azure.com/PeoplesHR/PHR-X/_git/PHR-Foundry`
+- **Repo:** `https://github.com/hBiz-dev-copilot/phr-foundry`
 
 ## Repository layout
 
@@ -22,7 +22,9 @@ and the plugins it distributes (`plugins/`).
 │       │   └── hrm_sql_standards/
 │       │       └── SKILL.md       # The one skill this plugin ships
 │       └── README.md
-├── azure-pipelines.yml           # CI: runs `claude plugin validate .` on PRs into main
+├── .github/
+│   └── workflows/
+│       └── validate.yml          # CI: runs `claude plugin validate .` on PRs into main
 ├── deps/                         # (Azure repo template dirs — reserved)
 ├── docs/
 ├── scripts/
@@ -34,10 +36,10 @@ and the plugins it distributes (`plugins/`).
 > Using the plugins rather than maintaining them? See the
 > **[usage guide](docs/USAGE.md)** — install, update, and how to drive each skill.
 
-Point Claude Code at the Azure DevOps repo, then install the plugin:
+Point Claude Code at the GitHub repo, then install the plugin:
 
 ```shell
-claude plugin marketplace add https://dev.azure.com/PeoplesHR/PHR-X/_git/PHR-Foundry
+claude plugin marketplace add https://github.com/hBiz-dev-copilot/phr-foundry
 claude plugin install org-standards@phr-foundry
 ```
 
@@ -59,7 +61,7 @@ add it to that project's `.claude/settings.json`:
     "phr-foundry": {
       "source": {
         "source": "git",
-        "url": "https://dev.azure.com/PeoplesHR/PHR-X/_git/PHR-Foundry"
+        "url": "https://github.com/hBiz-dev-copilot/phr-foundry"
       }
     }
   },
@@ -114,5 +116,5 @@ Or from inside a Claude Code session: `/plugin validate .`
    with a `name` and a `source` of `./plugins/<new-plugin>`.
 3. Add a section for it under **Plugin catalog** in [`docs/USAGE.md`](docs/USAGE.md),
    so users have a guide for the new skills.
-4. Run `claude plugin validate .` and open a PR into `main` — the Azure
-   pipeline validates it automatically.
+4. Run `claude plugin validate .` and open a PR into `main` — the GitHub
+   Actions workflow validates it automatically.

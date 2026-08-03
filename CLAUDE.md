@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-Internal Claude Code **plugin marketplace** for PeoplesHR, hosted on Azure DevOps.
+Internal Claude Code **plugin marketplace** for PeoplesHR, hosted on GitHub.
 One repo holds both the catalog and the plugins.
 
 - Marketplace: `phr-foundry` · Owner: PeoplesHR <sanuja.a@peopleshr.com>
-- Repo: `https://dev.azure.com/PeoplesHR/PHR-X/_git/PHR-Foundry`
+- Repo: `https://github.com/hBiz-dev-copilot/phr-foundry`
 
 ## Layout
 - `.claude-plugin/marketplace.json` — catalog (lists plugins + relative-path sources).
@@ -12,7 +12,7 @@ One repo holds both the catalog and the plugins.
 - `plugins/org-standards/` — the one plugin
   - `.claude-plugin/plugin.json` — manifest
   - `skills/hrm_sql_standards/SKILL.md` — its one skill: reformat SQL to PHR standard, **.NET Framework only**
-- `azure-pipelines.yml` — runs `claude plugin validate .` on every PR into `main`
+- `.github/workflows/validate.yml` — runs `claude plugin validate .` on every PR into `main`
 - `deps/`, `docs/`, `scripts/`, `src/` — Azure repo template dirs; leave in place.
 
 ## Rules

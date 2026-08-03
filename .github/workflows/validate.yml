@@ -1,0 +1,25 @@
+# Validates the marketplace catalog and every plugin on each PR into main,
+# so schema errors in marketplace.json / plugin.json / SKILL.md are caught
+# before merge.
+name: Validate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace and plugins
+        run: claude plugin validate .
