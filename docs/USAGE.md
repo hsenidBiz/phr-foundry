@@ -191,7 +191,7 @@ Claude Code afterward so it picks up the new values:
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `PHX_DB_TYPE` | Yes | `mssql` or `postgres` |
+| `PHX_DB_TYPE` | Yes | `mssql` or `postgres` exactly (aliases `sqlserver`/`postgresql` also accepted) — other values like `MSSQLDB` are rejected |
 | `PHX_DB_CONNECTION_STRING` | Yes | Full connection string for your target database |
 | `PHX_DB_SCHEMA_FILTER` | No | Comma-separated schemas to expose (default: `dbo` for SQL Server, `public` for Postgres) |
 
@@ -223,6 +223,7 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
+| `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |
 
 ## Reporting a problem
