@@ -14,7 +14,9 @@ One repo holds both the catalog and the plugins.
     third-party skill plugins (see below) — installing `org-standards` auto-installs them.
   - `skills/hrm_sql_standards/SKILL.md` — its own skill: reformat SQL to PHR standard, **.NET Framework only**
 - `.github/workflows/validate.yml` — runs `claude plugin validate .` on every PR into `main`
-- `deps/`, `docs/`, `scripts/`, `src/` — Azure repo template dirs; leave in place.
+- `docs/` — Azure repo template dir, holds `docs/USAGE.md` (real content — see rule below).
+  The other empty Azure template dirs (`deps/`, `scripts/`, `src/`) were removed since they
+  held nothing but placeholder READMEs.
 
 ## Rules
 - **Version lives in `plugin.json` only** (currently `1.1.0`). Bump the semver on every
