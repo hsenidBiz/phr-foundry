@@ -17,7 +17,8 @@ and the plugins it distributes (`plugins/`).
 ├── plugins/
 │   └── org-standards/            # One plugin
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 2.0.0 — see Versioning)
+│       │   └── plugin.json       # Manifest (version: 2.1.0 — see Versioning);
+│       │                         # also declares the phx-dbexplorer MCP server
 │       ├── skills/
 │       │   └── hrm_sql_standards/
 │       │       └── SKILL.md       # The one skill this plugin ships itself
@@ -32,16 +33,19 @@ and the plugins it distributes (`plugins/`).
 
 ## What's in `org-standards`
 
-The plugin ships one skill of its own.
+The plugin ships one skill of its own, plus one MCP server.
 
-| Source | Skill(s) | Notes |
+| Source | Skill(s) / MCP server | Notes |
 | --- | --- | --- |
 | **This repo (own skill)** | `hrm_sql_standards` | PHR-specific: reformat/scaffold HRM-DB MSSQL deployment SQL, **.NET Framework only**. |
+| **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a .NET project, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use. |
 
-We do not bundle third-party plugins as `dependencies` — Claude Code only auto-resolves a
+We do not bundle third-party *plugins* as `dependencies` — Claude Code only auto-resolves a
 cross-marketplace dependency if the user has already added that dependency's marketplace,
 so it isn't a true one-shot install and just pushes extra `marketplace add` commands onto
-users anyway. See [`CLAUDE.md`](CLAUDE.md#rules) for the rule against re-adding this.
+users anyway. See [`CLAUDE.md`](CLAUDE.md#rules) for the rule against re-adding this. (This
+doesn't apply to `phx-dbexplorer` above, which isn't a Claude Code plugin/marketplace at
+all — it's a plain MCP server binary fetched via `npx`.)
 
 ## Install from this repository
 
@@ -86,7 +90,7 @@ add it to that project's `.claude/settings.json`:
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (currently
-`2.0.0`). Claude Code resolves a plugin's version from the first of these that
+`2.1.0`). Claude Code resolves a plugin's version from the first of these that
 is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**

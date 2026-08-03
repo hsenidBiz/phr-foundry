@@ -93,6 +93,10 @@ claude plugin uninstall org-standards
 | --- | --- |
 | `hrm_sql_standards` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
 
+| MCP server | Use it for |
+| --- | --- |
+| `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
+
 #### What `hrm_sql_standards` does
 
 Given SQL you supply, it packages that SQL as a deployment file under
@@ -171,6 +175,31 @@ you, never written into the deployment files), and any risks or blockers.
 
 ---
 
+#### `phx-dbexplorer` — database schema browsing
+
+Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer)
+(a separate public repo — not vendored into `phr-foundry`). Installing the
+`org-standards` plugin registers it, but Claude Code only launches it via
+`npx -y github:hsenidBiz/phx-dbexplorer` the first time you use a tool that
+needs it, and it needs your database credentials to do anything.
+
+**Before it will work**, set these in your own shell profile (never commit
+them anywhere — `CONNECTION_STRING` carries your DB password):
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `PHX_DB_TYPE` | Yes | `mssql` or `postgres` |
+| `PHX_DB_CONNECTION_STRING` | Yes | Full connection string for your target database |
+| `PHX_DB_SCHEMA_FILTER` | No | Comma-separated schemas to expose (default: `dbo` for SQL Server, `public` for Postgres) |
+
+First use downloads a self-contained binary for your OS/arch to
+`~/.cache/phx-dbexplorer-mcp/<version>/` — no .NET SDK or runtime needed.
+Later calls reuse that cache. See that repo's README for the full tool list
+(`list_tables`, `get_table_schema`, `list_stored_procedures`, etc.) and for
+pinning a specific version via `PHX_DBEXPLORER_VERSION`.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -179,6 +208,8 @@ you, never written into the deployment files), and any risks or blockers.
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
+| `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
+| `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |
 
 ## Reporting a problem
 

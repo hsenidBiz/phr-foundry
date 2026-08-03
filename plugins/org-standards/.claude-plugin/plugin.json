@@ -1,10 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "org-standards",
-  "version": "2.0.0",
-  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects.",
+  "version": "2.1.0",
+  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects, and the phx-dbexplorer MCP server for browsing a database's schema.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
+  },
+  "mcpServers": {
+    "phx-dbexplorer": {
+      "command": "npx",
+      "args": ["-y", "github:hsenidBiz/phx-dbexplorer"],
+      "env": {
+        "DB_TYPE": "${PHX_DB_TYPE}",
+        "CONNECTION_STRING": "${PHX_DB_CONNECTION_STRING}",
+        "SCHEMA_FILTER": "${PHX_DB_SCHEMA_FILTER}"
+      }
+    }
   }
 }

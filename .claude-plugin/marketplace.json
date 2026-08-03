@@ -9,7 +9,7 @@
     {
       "name": "org-standards",
       "source": "./plugins/org-standards",
-      "description": "PeoplesHR organization standards. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects."
+      "description": "PeoplesHR organization standards. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects, and the phx-dbexplorer MCP server for browsing a database's schema."
     }
   ]
 }
