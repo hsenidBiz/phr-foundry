@@ -4,7 +4,7 @@ Internal Claude Code **plugin marketplace** for PeoplesHR, hosted on GitHub.
 One repo holds both the catalog and the plugins.
 
 - Marketplace: `phr-foundry` · Owner: PeoplesHR <sanuja.a@peopleshr.com>
-- Repo: `https://github.com/hBiz-dev-copilot/phr-foundry`
+- Repo: `https://github.com/hsenidBiz/phr-foundry`
 
 ## Layout
 - `.claude-plugin/marketplace.json` — catalog (lists plugins + relative-path sources).

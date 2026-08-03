@@ -6,7 +6,7 @@ and the plugins it distributes (`plugins/`).
 
 - **Marketplace name:** `phr-foundry`
 - **Owner:** PeoplesHR &lt;sanuja.a@peopleshr.com&gt;
-- **Repo:** `https://github.com/hBiz-dev-copilot/phr-foundry`
+- **Repo:** `https://github.com/hsenidBiz/phr-foundry`
 
 ## Repository layout
 
@@ -39,7 +39,7 @@ and the plugins it distributes (`plugins/`).
 Point Claude Code at the GitHub repo, then install the plugin:
 
 ```shell
-claude plugin marketplace add https://github.com/hBiz-dev-copilot/phr-foundry
+claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install org-standards@phr-foundry
 ```
 
@@ -61,7 +61,7 @@ add it to that project's `.claude/settings.json`:
     "phr-foundry": {
       "source": {
         "source": "git",
-        "url": "https://github.com/hBiz-dev-copilot/phr-foundry"
+        "url": "https://github.com/hsenidBiz/phr-foundry"
       }
     }
   },

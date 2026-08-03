@@ -15,7 +15,7 @@ You need this once per machine. Point Claude Code at the repo URL — no clone
 required.
 
 ```shell
-claude plugin marketplace add https://github.com/hBiz-dev-copilot/phr-foundry
+claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install org-standards@phr-foundry
 ```
 
@@ -27,7 +27,7 @@ cached GitHub credentials. Use the URL with the account prefix so Git knows
 which account to prompt for:
 
 ```shell
-claude plugin marketplace add https://hBiz-dev-copilot@github.com/hBiz-dev-copilot/phr-foundry
+claude plugin marketplace add https://hsenidBiz@github.com/hsenidBiz/phr-foundry
 ```
 
 ### Make it automatic for a whole project
@@ -42,7 +42,7 @@ manual install step.
     "phr-foundry": {
       "source": {
         "source": "git",
-        "url": "https://github.com/hBiz-dev-copilot/phr-foundry"
+        "url": "https://github.com/hsenidBiz/phr-foundry"
       }
     }
   },
@@ -168,7 +168,7 @@ you, never written into the deployment files), and any risks or blockers.
 
 | Symptom | Fix |
 | --- | --- |
-| `claude plugin marketplace add` hangs or fails | No cached GitHub credentials — use the `https://hBiz-dev-copilot@github.com/...` form, or sign in via Git Credential Manager first. |
+| `claude plugin marketplace add` hangs or fails | No cached GitHub credentials — use the `https://hsenidBiz@github.com/...` form, or sign in via Git Credential Manager first. |
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
@@ -176,5 +176,5 @@ you, never written into the deployment files), and any risks or blockers.
 ## Reporting a problem
 
 Open a PR or an issue against
-[`PHR-Foundry`](https://github.com/hBiz-dev-copilot/phr-foundry), or
+[`PHR-Foundry`](https://github.com/hsenidBiz/phr-foundry), or
 contact PeoplesHR &lt;sanuja.a@peopleshr.com&gt;.
