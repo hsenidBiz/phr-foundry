@@ -13,6 +13,12 @@ One repo holds both the catalog and the plugins.
   - `.claude-plugin/plugin.json` — manifest. Also declares the plugin's one
     MCP server (see below).
   - `skills/hrm_sql_standards/SKILL.md` — its own skill: reformat SQL to PHR standard, **.NET Framework only**
+  - `skills/phx_debugger/SKILL.md` — its own skill: fix an Azure DevOps bug end to
+    end from its bug ID. Supporting files: `INSTALL.md` (prerequisites the plugin
+    deliberately does not ship — the `superpowers` plugin and a per-developer ADO
+    MCP server) and `reference/` (`debugging-brief.md`, `rca-template.md`, both
+    read by the subagents the skill spawns, not by the skill itself). The whole
+    folder ships together; `SKILL.md` alone is not the skill.
   - MCP server `phx-dbexplorer` — schema-browsing tool for SQL Server/Postgres.
     Source lives in the separate public repo
     `https://github.com/hsenidBiz/phx-dbexplorer` (a .NET project, **not**
@@ -30,7 +36,7 @@ One repo holds both the catalog and the plugins.
   held nothing but placeholder READMEs.
 
 ## Rules
-- **Version lives in `plugin.json` only** (currently `2.1.0`). Bump the semver on every
+- **Version lives in `plugin.json` only** (currently `2.2.1`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
 - New plugins: add a `plugins/<name>/` dir + a `marketplace.json` entry with

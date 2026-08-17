@@ -17,11 +17,13 @@ and the plugins it distributes (`plugins/`).
 ├── plugins/
 │   └── org-standards/            # One plugin
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 2.1.0 — see Versioning);
+│       │   └── plugin.json       # Manifest (version: 2.2.1 — see Versioning);
 │       │                         # also declares the phx-dbexplorer MCP server
 │       ├── skills/
-│       │   └── hrm_sql_standards/
-│       │       └── SKILL.md       # The one skill this plugin ships itself
+│       │   ├── hrm_sql_standards/
+│       │   │   └── SKILL.md       # PHR SQL deployment-script standards
+│       │   └── phx_debugger/
+│       │       └── SKILL.md       # Azure DevOps bug fixing, end to end
 │       └── README.md
 ├── .github/
 │   └── workflows/
@@ -101,7 +103,7 @@ add it to that project's `.claude/settings.json`:
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (currently
-`2.1.0`). Claude Code resolves a plugin's version from the first of these that
+`2.2.1`). Claude Code resolves a plugin's version from the first of these that
 is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**

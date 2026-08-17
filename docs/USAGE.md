@@ -92,6 +92,7 @@ claude plugin uninstall org-standards
 | Skill | Use it for |
 | --- | --- |
 | `hrm_sql_standards` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
+| `phx_debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
@@ -175,6 +176,79 @@ you, never written into the deployment files), and any risks or blockers.
 
 ---
 
+#### What `phx_debugger` does
+
+Open Claude Code in the repository you are debugging, then give it a bug ID:
+
+```
+/org-standards:phx_debugger 141827
+```
+
+Plain language works too — *"fix ADO bug 141827"*. Either way the message must
+carry the **bug ID**: it is the one required argument, the skill looks the work
+item up by ID, and it will not go hunting for it by title. There is no code path
+to pass — the working directory *is* the codebase. Add a path only for a
+dependency that lives outside this repository.
+
+Before investigating, it shows you what it fetched — title, state, a short
+summary, attachment names — and **waits** for you to confirm it is the right bug.
+
+**The work item must be in `New`.** If it is in `Active`, `Resolved`, `Closed`
+or anything else, the run stops before the investigation starts: a bug that has
+left `New` usually has someone's work on it, and this skill would splice a second
+RCA into fields they are writing and move a state they are relying on. Move it
+back to `New` yourself if the state is wrong — the skill will not do it for you.
+
+It reads the work item — description, comments, linked items and every attachment
+— and decides whether there is enough to troubleshoot. If there is not, it asks
+**you** first: it lists what it checked and the specific questions blocking it,
+and waits. Answer any of them and it re-assesses and carries on — no waiting on
+the reporter for something you already know. Only if you cannot answer either do
+you tell it to post the questions as a comment on the work item, which ends the
+run. It never comments on the ticket unprompted. Then it **hands the bug to
+the Superpowers `systematic-debugging` skill**, running in a subagent, which finds
+the root cause and later writes the fix. `phx_debugger` itself never debugs and
+never edits code: it owns Azure DevOps, your approval gates and the RCA. It
+**stops** for you to approve the fix plan, and stops again for you to test the
+diff. After you confirm the fix works it writes the full RCA into the work item's
+`Custom.*` fields and moves the status, asking before each. It never commits,
+pushes or opens a PR unless you say so.
+
+Modes: `quick`, `smart` (work only in the checked-out branch), `balanced`
+(default), `advanced`.
+
+**Four hard gates run before anything else** — a connected Azure DevOps MCP
+server, the `superpowers` plugin, a valid bug ID, and a work item in `New`. Any
+one of them missing ends the run with an explanation, having read nothing and
+touched nothing. The two you install once:
+
+1. The **`superpowers` plugin**:
+   `/plugin install superpowers@claude-plugins-official`, then restart.
+2. An **Azure DevOps MCP server**, which `org-standards` deliberately does *not*
+   ship — the org name and your sign-in are per-developer. Add it yourself:
+
+   ```json
+   {
+     "mcpServers": {
+       "ado": {
+         "command": "npx",
+         "args": ["-y", "@azure-devops/mcp", "PeoplesHR"]
+       }
+     }
+   }
+   ```
+
+   Then `az login` and restart Claude Code. `/mcp` should show `ado` connected.
+
+**Every** Azure DevOps operation goes through that server. The skill will not use
+`az devops`, REST or a personal access token as a fallback — not even if you ask
+it to. Calls run as *your* identity, so your existing ADO permissions apply
+unchanged. Full prerequisites and troubleshooting:
+[`plugins/org-standards/skills/phx_debugger/INSTALL.md`](../plugins/org-standards/skills/phx_debugger/INSTALL.md).
+You do not install the skill separately — it arrives with `org-standards`.
+
+---
+
 #### `phx-dbexplorer` — database schema browsing
 
 Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer)
@@ -222,6 +296,8 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
+| `phx_debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback. |
+| `phx_debugger` stops saying it needs Superpowers | Run `/plugin install superpowers@claude-plugins-official` and restart. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |
