@@ -200,7 +200,12 @@ RCA into fields they are writing and move a state they are relying on. Move it
 back to `New` yourself if the state is wrong — the skill will not do it for you.
 
 It reads the work item — description, comments, linked items and every attachment
-— and decides whether there is enough to troubleshoot. Then it **hands the bug to
+— and decides whether there is enough to troubleshoot. If there is not, it asks
+**you** first: it lists what it checked and the specific questions blocking it,
+and waits. Answer any of them and it re-assesses and carries on — no waiting on
+the reporter for something you already know. Only if you cannot answer either do
+you tell it to post the questions as a comment on the work item, which ends the
+run. It never comments on the ticket unprompted. Then it **hands the bug to
 the Superpowers `systematic-debugging` skill**, running in a subagent, which finds
 the root cause and later writes the fix. `phx_debugger` itself never debugs and
 never edits code: it owns Azure DevOps, your approval gates and the RCA. It

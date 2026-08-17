@@ -155,8 +155,10 @@ issue"* is not.
 
 **If you cannot establish the cause at all** — the code is unreachable, the behaviour depends on data
 or a component you cannot see — return `rootCauseEstablished: false` with exactly what you
-investigated and what specifically would settle it. The parent turns that into a comment on the
-ticket, which is far more useful to the reporter than silence.
+investigated and what specifically would settle it. The parent puts that to the developer first —
+who may well know the answer and send it straight back to you — and only turns it into a comment on
+the ticket if they cannot answer. Either way, be specific: a vague "needs more info" is useless to
+both.
 
 ---
 

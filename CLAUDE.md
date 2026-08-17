@@ -36,7 +36,7 @@ One repo holds both the catalog and the plugins.
   held nothing but placeholder READMEs.
 
 ## Rules
-- **Version lives in `plugin.json` only** (currently `2.2.0`). Bump the semver on every
+- **Version lives in `plugin.json` only** (currently `2.2.1`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
 - New plugins: add a `plugins/<name>/` dir + a `marketplace.json` entry with

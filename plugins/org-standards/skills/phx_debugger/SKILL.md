@@ -164,8 +164,9 @@ The sequence is fixed:
       greeting ─▶ 0g confirm this is the bug [STOP] ─▶ 1 read the bug in full
                                           │
                                           ▼
-      2 SUFFICIENT? ──no──▶ comment on the ticket, stop
-                 │yes
+      2 SUFFICIENT? ──no──▶ ask the developer [STOP] ─┬─answered──▶ re-assess
+                 │yes                                 └─"comment"──▶ comment, stop
+                 │
                  ▼
       3 delegate ──▶ ❄️ investigator subagent · systematic-debugging Phases 1–3
                  ◀── root cause + proposed fix + RCA material
@@ -433,7 +434,7 @@ these, matching on the suffix after the server prefix:
 |---|---|
 | `wit_work_item` | 0e, 1, 6, 7 — fetch, comments, `get_type` |
 | `wit_work_item_write` | 6, 7 — RCA fields, state |
-| `wit_work_item_comment_write` | 2 — the insufficient-information comment |
+| `wit_work_item_comment_write` | 2 — the insufficient-information comment, only when the developer asks for it |
 | `wit_work_item_attachment` | 1 — attachments are **not** optional reading |
 | `search_code` | 3 — the subagent finds the true repository |
 | `repo_file` | 3 — reading a file at a branch |
@@ -704,10 +705,11 @@ developer's files.
 
 Two things in this stretch are not file edits and are not blocked by it, so do them without leaving
 plan mode: **reading** through the MCP server, and saving attachments to a scratch directory (below).
-One thing *is* a write and needs care: the insufficient-information **comment** at Step 2. If plan
-mode blocks that MCP call, call `ExitPlanMode` first — presenting the verdict and the comment you
-intend to post *is* the plan at that point — then post it and end the run. Do not skip the comment,
-and do not silently drop back into investigating.
+One thing *is* a write and needs care: the insufficient-information **comment** at Step 2 — and it is
+only ever posted after the developer asks for it, never as the first move. If plan mode blocks that
+MCP call, call `ExitPlanMode` first — presenting the verdict and the comment you intend to post *is*
+the plan at that point — then post it and end the run. Putting the questions to the developer is not
+a write and needs none of this; do it inside plan mode.
 
 You already have the work item from Step 0e — reuse that response rather than fetching it again. Now
 read it *fully*, and pull in what the first fetch did not cover. Then
@@ -809,12 +811,46 @@ Say so in one line, note anything thin that you will have to infer, and go to St
 
 Do not guess, and do not start reading code hoping something turns up.
 
-1. **Post a comment on the work item** with `wit_work_item_comment_write` · `add`. Pass
-   **`format: "Html"`** — the default is Markdown, and the HTML below renders as literal tags
-   without it. It must name exactly what is missing and
-   what would unblock it — a generic "insufficient information" comment is useless to the reporter
-   and will come back unanswered. Say what you *did* check, including the linked items, so nobody
-   repeats your work.
+**Ask the developer before you touch the ticket.** The developer sitting in front of you is very
+often the fastest source of the missing detail — they know the module, they may have seen the
+failure themselves, and waiting on a ticket comment for something they could answer in ten seconds
+wastes a day. A comment on the work item is for when *they* cannot answer either.
+
+1. **Put the gaps to the developer as questions, and STOP.** State the verdict in one line, say what
+   you checked (including the linked items, so nobody repeats your work), then list the specific
+   questions — numbered, each one answerable, each one naming why it blocks you. Close by offering
+   the two ways forward explicitly:
+
+   > I can't identify a code path to investigate from #140127 yet.
+   >
+   > **Checked:** description, repro steps, acceptance criteria, 3 comments, parent #119235,
+   > related #140306.
+   >
+   > **To proceed I need:**
+   > 1. The exact error message or stack trace, or a screenshot of the failure.
+   > 2. The build or environment where it reproduces — this says "Main", but the module ships
+   >    from three release lines.
+   > 3. The steps or the record that triggers it — the ticket says it does not happen on a new
+   >    request, so something about the existing record matters.
+   >
+   > **Answer any of these here and I'll carry on**, or tell me to **post them as a comment on the
+   > work item** for the reporter to answer.
+
+   Then **wait**. Do not post anything, and do not start investigating, until they reply.
+
+2. **If they answer** — fold what they gave you into the picture and re-run the sufficiency test
+   against it. A partial answer can still be enough: the test is unchanged, *can I identify a
+   specific code path to investigate*. If it now passes, say so in one line, note that the detail
+   came from the developer rather than the ticket (it matters later — the RCA and any comment you
+   write must not present it as though it were on the work item), and go to Step 3. If it still
+   fails, go back to the questions with only what is *still* missing, or offer the comment again.
+
+3. **If they ask you to comment** — or if they say they don't know and there is nobody else to ask —
+   post it on the work item with `wit_work_item_comment_write` · `add`. Pass **`format: "Html"`** —
+   the default is Markdown, and the HTML below renders as literal tags without it. It must name
+   exactly what is missing and what would unblock it — a generic "insufficient information" comment
+   is useless to the reporter and will come back unanswered. Carry over anything the developer *did*
+   settle, so the reporter is only asked what is genuinely still open.
 
    ```html
    <b>Insufficient information to debug</b><br><br>
@@ -830,15 +866,14 @@ Do not guess, and do not start reading code hoping something turns up.
    </ol>
    ```
 
-2. **Report it to the developer**, and say what you would need. Do not change the state unless they
-   ask — moving someone else's ticket is their call, not yours. If they do want it moved, read the
-   states from `wit_work_item` · `get_type` first and propose a target from that list.
+   Do not change the state unless they ask — moving someone else's ticket is their call, not yours.
+   If they do want it moved, read the states from `wit_work_item` · `get_type` first and propose a
+   target from that list.
 
-3. **Stop.** The run ends here.
+4. **Stop.** The run ends here — whether they had you comment or told you to leave the ticket alone.
 
 If the ticket is workable but one specific detail is missing, that is a question for the developer
-(see *ask, don't guess*), not an insufficiency verdict. Ask them first — they often know the answer
-without going back to QA.
+(see *ask, don't guess*), not an insufficiency verdict. Same reflex, smaller gap: ask them first.
 
 ## ❄️ Step 3 — Hand the bug to `systematic-debugging`
 
@@ -933,10 +968,12 @@ the position to the developer honestly rather than presenting a plan you do not 
 `rootCauseEstablished: false` is a legitimate outcome, not a failure to hide. The subagent will have
 returned what it investigated and what would settle it.
 
-Take that back to **Step 2's insufficient path**: post a comment on the work item built around what
-was actually investigated and the specific thing that would unblock it. That comment is far more
-valuable to the reporter than the original verdict would have been. Then report to the developer and
-stop.
+Take that back to **Step 2's insufficient path**, in the same order: put the specific thing that
+would settle it to the developer first, built around what was actually investigated, and let them
+either answer it or have you post it as a comment. If they answer, resume — continue the same
+subagent with what they gave you rather than spawning a fresh one. If they ask for the comment, it
+is far more valuable to the reporter than the original verdict would have been, because it names the
+code that *was* read. Then stop.
 
 ## Step 4 — Fix plan · **STOP**
 

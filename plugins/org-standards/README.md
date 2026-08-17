@@ -32,7 +32,7 @@ your own shell before launching Claude Code.
 
 ## Notes
 
-- **Versioned by semver** in `plugin.json` (currently `2.2.0`); bump it on each
+- **Versioned by semver** in `plugin.json` (currently `2.2.1`); bump it on each
   release that should reach users. See the root
   [README](../../README.md#versioning-manual-semver-in-pluginjson).
 - Skills and one MCP server: no agents or hooks.
