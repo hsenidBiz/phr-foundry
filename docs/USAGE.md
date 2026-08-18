@@ -193,11 +193,12 @@ dependency that lives outside this repository.
 Before investigating, it shows you what it fetched — title, state, a short
 summary, attachment names — and **waits** for you to confirm it is the right bug.
 
-**The work item must be in `New`.** If it is in `Active`, `Resolved`, `Closed`
-or anything else, the run stops before the investigation starts: a bug that has
-left `New` usually has someone's work on it, and this skill would splice a second
-RCA into fields they are writing and move a state they are relying on. Move it
-back to `New` yourself if the state is wrong — the skill will not do it for you.
+**It moves the status twice.** As soon as you confirm the bug it sets the work
+item to `Under Investigation`, before it reads anything, so the board shows the
+bug is being worked. Later, once the fix is written and you confirm it works, it
+asks and moves the work item to `Dev In Progress`. It does not gate on the state
+it found — if the bug looks like someone else is already on it, it says so and
+leaves the decision to you.
 
 It reads the work item — description, comments, linked items and every attachment
 — and decides whether there is enough to troubleshoot. If there is not, it asks
@@ -211,16 +212,15 @@ the root cause and later writes the fix. `phx_debugger` itself never debugs and
 never edits code: it owns Azure DevOps, your approval gates and the RCA. It
 **stops** for you to approve the fix plan, and stops again for you to test the
 diff. After you confirm the fix works it writes the full RCA into the work item's
-`Custom.*` fields and moves the status, asking before each. It never commits,
+`Custom.*` fields and moves the status to `Dev In Progress`, asking before each. It never commits,
 pushes or opens a PR unless you say so.
 
 Modes: `quick`, `smart` (work only in the checked-out branch), `balanced`
 (default), `advanced`.
 
-**Four hard gates run before anything else** — a connected Azure DevOps MCP
-server, the `superpowers` plugin, a valid bug ID, and a work item in `New`. Any
-one of them missing ends the run with an explanation, having read nothing and
-touched nothing. The two you install once:
+**Three hard gates run before anything else** — a connected Azure DevOps MCP
+server, the `superpowers` plugin, and a valid bug ID. Any one of them missing
+ends the run with an explanation, having read nothing and touched nothing. The two you install once:
 
 1. The **`superpowers` plugin**:
    `/plugin install superpowers@claude-plugins-official`, then restart.
