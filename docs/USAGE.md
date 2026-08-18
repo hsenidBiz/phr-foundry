@@ -206,7 +206,9 @@ It reads the work item — description, comments, linked items and every attachm
 and waits. Answer any of them and it re-assesses and carries on — no waiting on
 the reporter for something you already know. Only if you cannot answer either do
 you tell it to post the questions as a comment on the work item, which ends the
-run. It never comments on the ticket unprompted. Then it **hands the bug to
+run — and that comment always **@mentions whoever reported the bug**, so the
+questions reach them instead of waiting to be noticed. It tells you who it will
+mention before you agree, and never comments on the ticket unprompted. Then it **hands the bug to
 the Superpowers `systematic-debugging` skill**, running in a subagent, which finds
 the root cause and later writes the fix. `phx_debugger` itself never debugs and
 never edits code: it owns Azure DevOps, your approval gates and the RCA. It

@@ -436,7 +436,7 @@ these, matching on the suffix after the server prefix:
 |---|---|
 | `wit_work_item` | 0e, 0g, 1, 6, 7 — fetch, comments, `get_type` |
 | `wit_work_item_write` | 0g, 6, 7 — state, RCA fields, state |
-| `wit_work_item_comment_write` | 2 — the insufficient-information comment, only when the developer asks for it |
+| `wit_work_item_comment_write` | 2 — the insufficient-information comment, only when the developer asks for it, always @mentioning the reporter |
 | `wit_work_item_attachment` | 1 — attachments are **not** optional reading |
 | `search_code` | 3 — the subagent finds the true repository |
 | `repo_file` | 3 — reading a file at a branch |
@@ -718,6 +718,11 @@ These are the fields that carry a PHR bug. Reference names are **exact and case-
 | Parent | `System.Parent` |
 | The RCA narrative and classification fields | `Custom.*` — see Step 6 and `reference\rca-template.md` |
 
+**Keep the reporter as an identity, not just a name.** `System.CreatedBy` comes back as an identity
+object — `displayName`, `uniqueName`, and an `id` GUID. That GUID is what turns an @mention in a
+comment into an actual notification, and Step 2 cannot post its comment without it. Note it now,
+while the response is in front of you, and note `System.AssignedTo` the same way.
+
 `Custom.*` fields vary by process template, so read whatever the response actually carries rather
 than expecting a fixed set. The MCP server returns the raw work item — no flattening, no HTML
 stripping — so **you** do that sorting now:
@@ -819,7 +824,10 @@ wastes a day. A comment on the work item is for when *they* cannot answer either
    >    request, so something about the existing record matters.
    >
    > **Answer any of these here and I'll carry on**, or tell me to **post them as a comment on the
-   > work item** for the reporter to answer.
+   > work item** — I'll @mention **Nimal Perera**, who reported it, so the questions reach them.
+
+   Name that person in the offer, from `System.CreatedBy` — not “the reporter” in the abstract. The
+   developer is agreeing to notify a named colleague, and they should see who before they say yes.
 
    Then **wait**. Do not post anything, and do not start investigating, until they reply.
 
@@ -837,7 +845,30 @@ wastes a day. A comment on the work item is for when *they* cannot answer either
    is useless to the reporter and will come back unanswered. Carry over anything the developer *did*
    settle, so the reporter is only asked what is genuinely still open.
 
+   **@mentioning the person who reported the bug is mandatory.** A comment with nobody mentioned
+   notifies nobody — it sits on the work item until someone happens to open it, which is the exact
+   delay this step exists to avoid. The person to mention is the identity in **`System.CreatedBy`**,
+   and the mention goes on the **first line**, so it is the first thing they see. If the questions
+   are really for someone else — a person named in the discussion, or `System.AssignedTo` — mention
+   them **as well as** the reporter, never instead of.
+
+   A mention is an anchor carrying that identity's GUID. Plain `@Name` text notifies no one; it
+   renders as literal characters:
+
    ```html
+   <a href="#" data-vss-mention="version:2.0,IDENTITY-GUID">@Display Name</a>
+   ```
+
+   Substitute the real `id` and `displayName` from `System.CreatedBy`. If you do not have the GUID,
+   re-fetch with `wit_work_item` · `get`, `expand: "All"` and read the identity from `fields`. **If it
+   still will not resolve, do not post the comment.** Tell the developer, show them the text you were
+   going to post, and let them decide whether to post it themselves or give you the right person.
+   Posting an unmentioned comment — or a literal `@Nimal Perera` that notifies nothing — is worse
+   than not posting: the ticket looks answered and nobody has been asked.
+
+   ```html
+   <a href="#" data-vss-mention="version:2.0,3f2b0c1e-8f4a-4d2c-9a71-6b0e5d9c4a10">@Nimal Perera</a>
+   — you raised this one; I need a little more before I can investigate it.<br><br>
    <b>Insufficient information to debug</b><br><br>
    I could not identify a code path to investigate from this work item.<br><br>
    <b>Checked:</b> description, repro steps, acceptance criteria, 3 comments,
@@ -850,6 +881,9 @@ wastes a day. A comment on the work item is for when *they* cannot answer either
      <li>The steps or the record that triggers it — it does not reproduce on a new request</li>
    </ol>
    ```
+
+   When the call returns, report it in one line — the comment ID and **who was mentioned**, by name —
+   so the developer knows the notification went out and to whom.
 
    The bug is in `Under Investigation` from Step 0g and stays there — no fix was written, so nothing
    earns `Dev In Progress`. Do not move it anywhere else unless the developer asks; if they want it

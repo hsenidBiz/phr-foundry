@@ -127,9 +127,10 @@ low, which is why `smart` on Opus is often the strongest combination.
 
 ## What it does, in order
 
-0. **Checks its four gates** — the Azure DevOps MCP server is connected, the Superpowers plugin is
-   available, the bug ID you gave is a valid work item ID, and the work item is in state `New`. Any
-   one of them missing ends the run right there, having read nothing and touched nothing.
+0. **Checks its three gates** — the Azure DevOps MCP server is connected, the Superpowers plugin is
+   available, and the bug ID you gave is a valid work item ID. Any one of them missing ends the run
+   right there, having read nothing and touched nothing. The state the bug is in is not a gate: it
+   is reported to you at the confirmation step and the call is yours.
 1. **Reads the bug** — description, repro steps, acceptance criteria, comments, parent and every
    related link. A bug copied across version lines often has an empty description and all its
    detail on the sibling, so the links get read before anything is called missing.
@@ -139,8 +140,11 @@ low, which is why `smart` on Opus is often the strongest combination.
      blocking it, and stops. Answer any of them and it re-assesses and carries on; you never wait on
      a ticket comment for something you already know. If you can't answer either, tell it to post
      the questions as a comment on the work item — **insufficient information to debug** — and it
-     stops there. It will not comment unless you ask it to, and will not change the state without
-     being asked.
+     stops there. That comment always **@mentions the person who reported the bug**, so it lands in
+     their notifications rather than sitting unread on the ticket; it tells you who that is before
+     you agree, and reports the mention after posting. If the mention can't be resolved it shows you
+     the text and posts nothing. It will not comment unless you ask it to, and will not change the
+     state without being asked.
 3. ❄️ **Hands the bug to `systematic-debugging`** — the superpowered step, and the one that does the
    actual debugging. `phx_debugger` packages up everything it learned about the bug and spawns a
    **subagent** that runs the superpower's four phases under one Iron Law: *no fixes without root
@@ -207,7 +211,7 @@ changes sit in your working tree for you to review.
 | ADO calls fail with an auth error | Run `az login` again; the token has expired. Restart Claude Code afterwards |
 | ADO calls fail with "not found" on a repo you can see | The MCP server uses *your* identity — check you are signed in as the right account and to the right tenant |
 | It refuses to use `az devops` even when asked | Working as designed. See *Three things it will not do* |
-| `Insufficient information` on a bug you think is fine | It asks you before it comments — read the questions, and if you know the answers just reply and it carries on. Only say "comment on the ticket" when the reporter is the one who has to answer |
+| `Insufficient information` on a bug you think is fine | It asks you before it comments — read the questions, and if you know the answers just reply and it carries on. Only say "comment on the ticket" when the reporter is the one who has to answer — the comment @mentions them, so they get notified |
 | A state change is rejected | Your process template does not allow that transition from the current state. It will say so and ask |
 | Skill not found | The `org-standards` plugin is not installed, or Claude Code has not been restarted since it was. `claude plugin list` should show it |
 | "Needs the Superpowers plugin" | Step 1 not done — run `/plugin install superpowers@claude-plugins-official` and **restart** |
