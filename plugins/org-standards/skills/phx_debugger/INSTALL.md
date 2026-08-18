@@ -109,12 +109,11 @@ you invoke — *"…the approval engine is in `D:\Code\ApprovalEngine`"*.
 Before it investigates anything it shows you the work item it fetched — title, state, a short summary
 and what is attached — and waits for you to confirm it is the right bug.
 
-**The bug has to be in `New`.** If the work item is in any other state — `Active`, `Resolved`,
-`Closed`, anything — the run stops before the investigation starts and tells you what state it found.
-A bug that has left `New` usually has someone's work on it already, and this skill would splice a
-second RCA into fields they are writing and move a state they are relying on. If the state is simply
-wrong, move it back to `New` in Azure DevOps yourself and run it again — the skill will not do that
-for you.
+**It moves the status twice.** Once you confirm the bug, it sets the work item to **`Under
+Investigation`** before it starts reading — so the board shows the bug is being worked. After the fix
+is written and *you* confirm it works, it asks and then moves it to **`Dev In Progress`**. It does
+not gate on the state it found; if the bug looks like somebody else is already on it, it says so and
+leaves the call to you.
 
 **Modes** — `quick` (essentials only), `smart` (work only in the branch you have checked out; no
 repo hunting, no build, no push), `balanced` (default, full procedure), `advanced` (proves the
@@ -212,6 +211,6 @@ changes sit in your working tree for you to review.
 | A state change is rejected | Your process template does not allow that transition from the current state. It will say so and ask |
 | Skill not found | The `org-standards` plugin is not installed, or Claude Code has not been restarted since it was. `claude plugin list` should show it |
 | "Needs the Superpowers plugin" | Step 1 not done — run `/plugin install superpowers@claude-plugins-official` and **restart** |
-| "Only starts on a bug in `New`" | The work item has left `New`, so somebody is likely already working it. Move it back in Azure DevOps if the state is wrong, then run again — the skill will not change it for you |
+| `Under Investigation` / `Dev In Progress` not in the state list | Your process template names them differently. It will not force the nearest match — it lists the states your Bug type does have and asks which you want |
 | "Cannot use that bug ID" | What you passed is not a positive integer. It will not guess at a repair — give it the plain ID or the `_workitems/edit/<id>` URL |
 | No ❄️ markers in the output | It ran without the superpower. That should be impossible — report it |

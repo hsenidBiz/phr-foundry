@@ -1,6 +1,6 @@
 ---
 name: phx_debugger
-description: Fixes an Azure DevOps bug end to end from its bug ID — reads the work item, delegates root cause and fix to the Superpowers systematic-debugging skill in subagents, then writes the RCA back and moves the status, gating on the developer's approval at each step. Use whenever a message carries an ADO bug ID or work item URL with a request to investigate, debug, root-cause or fix it — "fix bug 141827", "why is AB#141827 happening", a pasted _workitems/edit link. The bug ID is required; four hard gates (ADO MCP server, superpowers plugin, valid ID, work item in state New) stop the run before anything is read or touched.
+description: Fixes an Azure DevOps bug end to end from its bug ID — reads the work item, delegates root cause and fix to the Superpowers systematic-debugging skill in subagents, then writes the RCA back and moves the status, gating on the developer's approval at each step. Use whenever a message carries an ADO bug ID or work item URL with a request to investigate, debug, root-cause or fix it — "fix bug 141827", "why is AB#141827 happening", a pasted _workitems/edit link. The bug ID is required; three hard gates (ADO MCP server, superpowers plugin, valid ID) stop the run before anything is read or touched.
 ---
 
 # ❄️ PHX Debugger
@@ -15,9 +15,9 @@ The developer should know immediately what they have started and what powers it.
 
 **It comes after Step 0, not before it.** The banner names the bug by title, and you do not have the
 title until Step 0e has fetched the work item — so the order is: gates (0a, 0c) → resolve the bug ID
-(0d) → fetch the work item (0e) → clear the state gate (0f) → *then* this banner, immediately
-followed by the confirmation gate in Step 0g. Never print it with a placeholder title, and **never
-print it at all if any of the five gates stopped the run** — a banner above a refusal reads as though
+(0d) → fetch the work item (0e) → *then* this banner, immediately
+followed by the confirmation gate in Step 0f. Never print it with a placeholder title, and **never
+print it at all if any of the four gates stopped the run** — a banner above a refusal reads as though
 the run started.
 
 Print it exactly like this, filled in:
@@ -158,10 +158,10 @@ The sequence is fixed:
       0e fetch + validate the bug ──not found / not a Bug──▶ report the error, stop
                         │
                         ▼
-      0f state gate ──state ≠ New──▶ stop
+      greeting ─▶ 0f confirm this is the bug [STOP]
                         │
                         ▼
-      greeting ─▶ 0g confirm this is the bug [STOP] ─▶ 1 read the bug in full
+      0g state ─▶ "Under Investigation" ─▶ 1 read the bug in full
                                           │
                                           ▼
       2 SUFFICIENT? ──no──▶ ask the developer [STOP] ─┬─answered──▶ re-assess
@@ -178,7 +178,7 @@ The sequence is fixed:
                  │
                  ▼
       5c hand back [STOP] ─▶ 5d assemble the RCA from both returns
-                 ─▶ 6 RCA onto the work item ─▶ 7 status ─▶ done
+                 ─▶ 6 RCA onto the work item ─▶ 7 status "Dev In Progress" ─▶ done
 ```
 
 You never read or edit source yourself. Steps 3 and 5b are where the code work happens, and both of
@@ -366,10 +366,12 @@ A question that reads *"which of these two, and here's what I'd pick"* takes ten
 - **Work items are fetched by ID, never found by content.** See *the second law*. The ID the
   developer gave you, plus any ID reachable through a `relations[]` link — nothing else. An ID that
   does not resolve ends the run; it never becomes a title search.
-- **The four Step 0 gates are absolute.** No ADO MCP server (0a), no `superpowers:systematic-debugging`
-  (0c), no valid bug ID (0d), or a work item not in `New` (0f) each end the run with nothing read and
+- **The three Step 0 gates are absolute.** No ADO MCP server (0a), no `superpowers:systematic-debugging`
+  (0c), or no valid bug ID (0d) each end the run with nothing read and
   nothing touched. None of them has a degraded mode, a "just this once", or a repair you apply
   yourself — and you never write to Azure DevOps to make a gate pass.
+- **The only two states this skill sets are `Under Investigation` (Step 0g) and `Dev In Progress`
+  (Step 7).** It does not gate on the state it found, and it never moves a bug anywhere else.
 - **Never commit, push, or create a pull request** unless the developer explicitly approves that step.
 - **Never write RCA content into `System.History`.** It belongs in the `Custom.*` fields.
 - **Stop where the procedure says stop.** Presenting a plan and then implementing it in the same
@@ -432,8 +434,8 @@ these, matching on the suffix after the server prefix:
 
 | Tool | Used at |
 |---|---|
-| `wit_work_item` | 0e, 1, 6, 7 — fetch, comments, `get_type` |
-| `wit_work_item_write` | 6, 7 — RCA fields, state |
+| `wit_work_item` | 0e, 0g, 1, 6, 7 — fetch, comments, `get_type` |
+| `wit_work_item_write` | 0g, 6, 7 — state, RCA fields, state |
 | `wit_work_item_comment_write` | 2 — the insufficient-information comment, only when the developer asks for it |
 | `wit_work_item_attachment` | 1 — attachments are **not** optional reading |
 | `search_code` | 3 — the subagent finds the true repository |
@@ -617,63 +619,18 @@ Four things to check on the response, in order:
    else, say what it actually is and ask whether to continue — this skill's RCA fields, its
    classification dropdowns and its state list are all Bug-shaped, and much of Steps 6–7 will not fit
    another type.
-3. **Read `System.State` and hold it for Step 0f.** Do not act on it yet, and do not print the
-   banner before that gate has passed.
+3. **Read `System.State`, and treat it as information, not a gate.** Show it in Step 0f so the
+   developer can see what they are picking up, and hold it as the `from` value for the transition at
+   Step 0g. It never stops the run. If it is a state that plainly means somebody else is already on
+   this — an active assignee, a fix in review, a resolution signed off — say so in one line at Step
+   0f and let the developer decide; do not decide for them.
 4. **Note `System.TeamProject` and `rev`.** The project is what every later tool call needs (Step 0b),
    and the rev is your concurrency baseline for Step 6.
 
-### Step 0f — The bug must be in **`New`**. **Hard gate**
+### Step 0f — Confirm this is the right bug. **STOP**
 
-**This skill fixes bugs that nobody has started.** If `System.State` is anything other than `New`,
-the run stops here.
-
-The reason is not bookkeeping. A bug that has left `New` has someone else's work on it — an active
-assignee mid-investigation, a fix already in review, a resolution somebody signed off. Everything
-this skill does downstream is destructive to that: Step 6 splices into RCA fields another developer
-is writing, Step 7 moves a state QA is relying on, and Step 5 puts a second, independent fix into a
-tree that may already contain the first. Re-debugging a closed bug also burns a full investigation
-on a defect that no longer exists in the code.
-
-The check is exact: `System.State == "New"`, matched literally against the value on the work item.
-
-- **Do not normalise.** `new`, `New `, `To Do`, `Proposed`, `Active`, `Open` and `Approved` are all
-  *not* `New`. If your org's process template genuinely calls the initial state something else, that
-  is a change to make in this file deliberately — not a match to loosen at run time.
-- **Do not move it into `New` to satisfy the gate.** Writing `System.State = New` so the run can
-  proceed defeats the entire point and destroys the real state. There is no circumstance in which
-  this skill sets a state at Step 0.
-- **Do not negotiate it.** "It's only in Active because I opened it", "I'm the assignee anyway",
-  "just this once" — the answer is the same. If the developer wants the run anyway, the thing they
-  change is the work item, in Azure DevOps, themselves, deliberately; then they re-invoke.
-
-**If the state is not `New`, print this and end the run.** No banner above it, nothing written to
-Azure DevOps, no investigation:
-
-> ❄️ **PHX Debugger only starts on a bug in `New`.**
->
-> **#\<id\> — \<title\>** is in **`<state>`**, assigned to **\<assignee, or "nobody"\>**.
->
-> A bug that has left `New` usually has work on it already — an investigation in progress, a fix in
-> review, or a resolution somebody signed off. Running this skill over that would splice a second
-> RCA into fields someone else is writing and move a state they are relying on, so I stop here
-> instead.
->
-> If this bug genuinely is untouched and the state is wrong, move it back to `New` in Azure DevOps
-> and run me again. If you want the investigation without the ADO writes, say so and I will tell you
-> what I can do — but I will not proceed on this work item as it stands.
->
-> I have not read your bug in full and have not touched your code.
-
-Then **stop**. Do not offer to continue in a "read-only mode" you then improvise, and do not start
-the investigation while waiting for a reply. If the developer fixes the state and asks again, go
-back to Step 0e and re-fetch — the item has changed, so the response you are holding is stale.
-
-Only once this gate passes: print the greeting banner, with the real title and the working directory
-in it.
-
-### Step 0g — Confirm this is the right bug. **STOP**
-
-Before any investigation, show the developer what you actually fetched and get their go-ahead. This
+Once the work item has resolved and validated: print the greeting banner, with the real title and
+the working directory in it. Then, before any investigation, show the developer what you actually fetched and get their go-ahead. This
 is cheap insurance: it catches a transposed digit, a bug from the wrong version line, or a URL pasted
 from the wrong browser tab — all while nothing has been read and nothing touched.
 
@@ -691,12 +648,40 @@ Present a short block, not a data dump:
 
 Then ask one question: **"Is this the bug you want me to fix?"** and **wait**.
 
-- **Yes** → Step 1, and read it all properly.
-- **No / wrong one** → take the corrected ID and go back to Step 0e — **and through 0f again**. A
-  replacement bug gets the same state gate as the first one; it does not inherit the first one's
-  pass. Do not carry any impression of the discarded work item forward.
+- **Yes** → Step 0g, then Step 1 and read it all properly.
+- **No / wrong one** → take the corrected ID and go back to Step 0e. A replacement bug is validated
+  from scratch; it inherits nothing from the first one. Do not carry any impression of the discarded
+  work item forward.
 
 Do not merge this into a longer message that also starts the investigation. It is a stop.
+
+### Step 0g — Move the bug to **`Under Investigation`**
+
+The developer has just said *yes*, so work on this bug starts now — and the board should say so
+before you disappear into the investigation. This is the first write this skill makes to Azure
+DevOps, and it happens **before `EnterPlanMode`** at Step 1, so plan mode is never in the way of it.
+
+1. Call `wit_work_item` · `get_type` and read its `states[]`. **Never type a state name from
+   memory** — this org has 21 for Bug alone. Find the entry whose name is `Under Investigation` and
+   use it verbatim. Hold the response; Steps 6 and 7 reuse it rather than calling again.
+2. If `states[]` has no `Under Investigation`, **do not force the nearest match** — `Active`,
+   `Investigating` and `In Analysis` are not it. Say which states the type does offer, ask the
+   developer which one they want, and wait.
+3. If the bug is already in `Under Investigation`, there is nothing to write. Say so in one line and
+   go on to Step 1.
+4. Otherwise `wit_work_item_write` · `update`:
+
+   ```
+   { "op": "add", "path": "/fields/System.State",   "value": "Under Investigation" }
+   { "op": "add", "path": "/fields/System.History", "value": "<short note: investigation started>" }
+   ```
+
+5. Report the transition, `from → to`, from the response — one line, not a section.
+
+If the transition is rejected, the process template does not allow it from the state the bug is in.
+**Report that plainly and ask the developer how they want to proceed** — whether to move it by hand
+first, or to run the investigation without the status change. Do not try other states at random, and
+do not silently continue as though the write succeeded.
 
 ## Step 1 — Read the bug properly
 
@@ -866,9 +851,10 @@ wastes a day. A comment on the work item is for when *they* cannot answer either
    </ol>
    ```
 
-   Do not change the state unless they ask — moving someone else's ticket is their call, not yours.
-   If they do want it moved, read the states from `wit_work_item` · `get_type` first and propose a
-   target from that list.
+   The bug is in `Under Investigation` from Step 0g and stays there — no fix was written, so nothing
+   earns `Dev In Progress`. Do not move it anywhere else unless the developer asks; if they want it
+   put back where it was, read the states from `wit_work_item` · `get_type` first and take the target
+   from that list.
 
 4. **Stop.** The run ends here — whether they had you comment or told you to leave the ticket alone.
 
@@ -1170,22 +1156,30 @@ Then **re-read the item** — `wit_work_item` · `get` — and confirm every fie
 moved. Report the rev change, the per-field character counts for the eleven, and the three dropdowns
 as `before → after`.
 
-## Step 7 — Status
+## Step 7 — Status → **`Dev In Progress`**
 
-1. Call `wit_work_item` · `get_type` and read its `states[]`. Never type a state name from memory —
-   this org has 21 for Bug alone. (If you already called `get_type` in Step 6, reuse that response
-   rather than calling again.)
-2. Propose the target that matches what actually happened, and say why.
-3. **Confirm with the developer**, then `wit_work_item_write` · `update` with two operations in one
-   call:
+The fix is written and the developer has confirmed it works (Step 5c), so the bug moves out of
+`Under Investigation` and on to the next hand — `Dev In Progress`.
+
+1. Reuse the `wit_work_item` · `get_type` response from Step 0g (or Step 6) and read its `states[]`.
+   Never type a state name from memory — this org has 21 for Bug alone. Find `Dev In Progress` and
+   use it verbatim. If the type does not offer it, **do not force the nearest match**: say which
+   states it does offer and ask which one they want.
+2. Say what you are about to do — *"the fix is confirmed, so I'll move #\<id\> from `Under
+   Investigation` to `Dev In Progress`"* — and **confirm with the developer**.
+3. Then `wit_work_item_write` · `update` with two operations in one call:
 
    ```
-   { "op": "add", "path": "/fields/System.State",   "value": "<state from states[]>" }
+   { "op": "add", "path": "/fields/System.State",   "value": "Dev In Progress" }
    { "op": "add", "path": "/fields/System.History", "value": "<short note: what was done, by whom>" }
    ```
 
    A History note **is** what `System.History` is for — unlike RCA content, which never goes there.
 4. Report the transition, `from → to`, from the response.
+
+**Only a confirmed fix earns this transition.** If the developer's test failed, or they have not
+tested yet, the bug stays in `Under Investigation` — that is what it is for. Say the status is
+unchanged and why.
 
 If the transition is rejected, the process template does not allow it from the current state. Report
 that plainly and ask which state they want rather than trying alternatives at random.
