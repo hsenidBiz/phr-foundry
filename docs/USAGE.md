@@ -190,6 +190,13 @@ item up by ID, and it will not go hunting for it by title. There is no code path
 to pass — the working directory *is* the codebase. Add a path only for a
 dependency that lives outside this repository.
 
+**The project defaults to `HRM`.** Name one only when the bug lives elsewhere —
+*"bug 141827 in Payroll"*, or paste the work item URL, which carries the project
+in its path. If the ID is not in the project it tried, it says so explicitly —
+*"Bug #141827 was not found in the `HRM` project"* — with the Azure DevOps error,
+and waits for you to give it the right project name (or a corrected ID) before
+fetching again. It never sweeps other projects looking for the ID.
+
 Before investigating, it shows you what it fetched — title, state, a short
 summary, attachment names — and **waits** for you to confirm it is the right bug.
 

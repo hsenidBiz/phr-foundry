@@ -30,6 +30,7 @@ literally.
 ❄️ ─────────────────────────────────────────────── ❄️
 
   Bug         #<id> — <title>
+  Project     <System.TeamProject>
   Code        <working directory>
   ADO access  <mcp server name> (MCP) — the only path, no CLI fallback
   Superpower  systematic-debugging, in a subagent — it finds the cause
@@ -132,10 +133,11 @@ plan was approved, you are still in plan mode — say so and exit it rather than
       0d bug ID ──none or malformed──▶ ask, wait
                           │
                           ▼
-      0e fetch + validate ──404 / not a Bug──▶ report the error, stop
-         (0b: take System.TeamProject from it, reuse it everywhere)
-                          │
-                          ▼
+      0e fetch ──404──▶ "not found in <project>", ask for the project, wait ─▶ 0e
+         │      ──not a Bug──▶ say what it is, ask
+         │  (0b: the project the developer named, else HRM;
+         │   System.TeamProject from the response wins from here on)
+         ▼
       greeting ─▶ 0f confirm this is the bug [STOP]
                           │
                           ▼
@@ -198,7 +200,8 @@ the network boundary: anything that talks to the ADO service goes through MCP.
 offer you a PAT, not if the bug is urgent. Say plainly that this skill has no fallback path and that
 `az devops` is theirs to run in their own terminal — you will not run it and will not act on ADO data
 obtained that way. If an MCP **call** fails — auth expired, org wrong, project not found — report the
-tool's own error verbatim, say what it means, and stop. A failing call is never a reason to switch
+tool's own error verbatim, say what it means, and stop. The one exception is Step 0e's work-item
+404, which has its own recovery: name the project you tried and ask for the right one. A failing call is never a reason to switch
 transport. The same applies mid-run: if the server drops out at Step 5, the run stops at Step 5 with
 the work so far reported honestly.
 
@@ -232,15 +235,34 @@ or setting key is required — it is how the investigator finds the true reposit
 failing path. The distinction is the object, not the verb: searching for a *work item* is forbidden,
 searching for *code* is not.
 
-#### When the ID does not resolve, **stop** — do not go looking
+#### When the ID does not resolve, **ask which project** — do not go looking
 
-If `wit_work_item` · `get` returns 404 or "work item does not exist":
+If `wit_work_item` · `get` returns 404 or "work item does not exist", the ID and the project are two
+separate suspects — and when you defaulted to `HRM` at Step 0b, the project is the likelier one. Stop
+and say exactly where you looked:
 
-- **Report the tool's own error verbatim**, say the ID did not resolve, and name the likely reasons —
-  a mistyped digit, a work item in a different Azure DevOps organization from the one your MCP server
-  points at, or one your account cannot see.
-- **Ask the developer to re-check the ID**, and wait. When they give you a corrected one, go back to
-  Step 0e with it.
+> ❄️ **Bug #141827 was not found in the `HRM` project.**
+>
+> `<the tool's own error, verbatim>`
+>
+> I looked in `HRM`, the project I use when the message does not name one. If this bug lives in a
+> different Azure DevOps project, give me that project name and I will fetch the same ID from there.
+> Otherwise the ID may be mistyped, in another Azure DevOps organization, or not visible to your
+> account — re-check it and I will carry on.
+>
+> I have not read anything or touched your code.
+
+- **Always name the project you actually tried.** A bare "not found" reads as *this bug does not
+  exist*, which is a different — and usually wrong — claim. Use the same wording when the project was
+  one the developer named: *"Bug #141827 was not found in the `Payroll` project."*
+- **Report the tool's own error verbatim** alongside it.
+- **Then wait.** A project name means re-running Step 0e with the same ID against that project; a
+  corrected ID means re-running Step 0e with the new ID against the project you already have. Either
+  is an ordinary retry — nothing has been read or written, so resuming is safe, and you do not make
+  them re-invoke the skill.
+- **One project per attempt, and only ones you were given.** Do not work through projects on your own
+  — no `core_list_projects` sweep, no trying the neighbouring version line "just in case". If the
+  project the developer names also comes back not-found, report that the same way and ask again.
 - **Do not post anything to Azure DevOps.** There is no valid work item to comment on.
 - **Do not search for it.** Not by the title mentioned in chat, not by the words in their message,
   not "to check whether it was renumbered". Recovering a failed lookup by full-text search finds a
@@ -346,7 +368,7 @@ actual names from your tool list; never assume the prefix.**
 | Allowed **states** and field `allowedValues` for the type | `wit_work_item` · `get_type` |
 | Post a comment to a person | `wit_work_item_comment_write` · `add`, `format: "Html"` |
 | Write RCA fields / move state | `wit_work_item_write` · `update` |
-| The project list, only if you need one before Step 0e | `core_list_projects` |
+| The project list — **not** for choosing the project to fetch a bug from; Step 0b decides that | `core_list_projects` |
 | Branch inventory, for the naming convention at Step 5a | `repo_branch` · `list` |
 | Create a branch in ADO | `repo_create_branch` — only after explicit approval |
 | Create a pull request | `repo_pull_request_write` · `create` — only after explicit approval |
@@ -427,11 +449,25 @@ were missing, and end the run:
 >
 > Setup detail is in this skill's `INSTALL.md`.
 
-### Step 0b — Which project?
+### Step 0b — Which project? **`HRM` is the default**
 
-Most tools take a `project`. Get it from the work item itself in Step 0e (`System.TeamProject`) and
-reuse that value everywhere afterwards. Do not guess it. If a tool needs a project *before* you have
-fetched the bug, use `core_list_projects` and ask the developer rather than picking one.
+Most tools take a `project`, and the first fetch at Step 0e needs one before you have a work item to
+read it off. Resolve it in this order:
+
+1. **The project the developer named**, when the invoking message names one — *"bug 141827 in
+   Payroll"*, a `…/dev.azure.com/<org>/Payroll/_workitems/edit/141827` URL (the path segment after
+   the org **is** the project), or a project they gave you earlier in this run after a not-found.
+2. **`HRM` otherwise.** It is this skill's default project and you use it without asking — that is
+   where the bugs normally live. Do not call `core_list_projects`, and do not make the developer pick
+   a project up front: Step 0e's not-found path is where a wrong assumption gets corrected, cheaply,
+   before anything has been read or written.
+
+**Say which project you are fetching from**, so a defaulted `HRM` is never silent — in the Step 0e
+attempt, in the not-found message, and on the banner.
+
+Once the work item resolves, **`System.TeamProject` on the response is authoritative** — reuse that
+value for every later call, even where it differs from the project you fetched with. Never guess a
+project after that point: it is on the work item you are already holding.
 
 ### ❄️ Step 0c — Is Superpowers available? **Hard gate**
 
@@ -512,9 +548,11 @@ This is the same call Step 1 uses — one fetch serves both, so do not call it t
 
 Four things to check on the response, in order:
 
-1. **It resolved.** A 404 or "work item does not exist" means the ID is wrong, or it belongs to an
-   organization your MCP server is not pointed at. **Report the tool's own error verbatim and stop** —
-   see *when the ID does not resolve*, above.
+1. **It resolved.** A 404 or "work item does not exist" means the ID is not in the project you
+   fetched from (Step 0b) — the bug may live in another project, the ID may be wrong, or it may
+   belong to an organization your MCP server is not pointed at. **Name the project you tried, report
+   the tool's own error verbatim, and ask for the right project** — see *when the ID does not
+   resolve*, above. Do not go looking for it.
 2. **It is a bug.** Read `System.WorkItemType`. If it is a Task, User Story, Feature or anything else,
    say what it actually is and ask whether to continue — the RCA fields, the classification dropdowns
    and the state list are all Bug-shaped, and much of Steps 6–7 will not fit another type.
@@ -522,7 +560,8 @@ Four things to check on the response, in order:
    developer can see what they are picking up, and hold it as the `from` value for Step 2a. It never
    stops the run. If it plainly means somebody else is already on this — an active assignee, a fix in
    review, a resolution signed off — say so in one line at Step 0f and let the developer decide.
-4. **Note `System.TeamProject` and `rev`.** The project is what every later tool call needs (Step 0b).
+4. **Note `System.TeamProject` and `rev`.** The project on the response is what every later tool call
+   uses from here on, in place of the one you fetched with (Step 0b).
    The `rev` is your concurrency baseline — **and you update it from the response of every write you
    make yourself** (Step 2a's state change, a Step 2 comment), so that the check at Step 6 only ever
    fires on somebody else's edit.
