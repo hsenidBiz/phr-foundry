@@ -190,14 +190,22 @@ item up by ID, and it will not go hunting for it by title. There is no code path
 to pass — the working directory *is* the codebase. Add a path only for a
 dependency that lives outside this repository.
 
+**The project defaults to `HRM`.** Name one only when the bug lives elsewhere —
+*"bug 141827 in Payroll"*, or paste the work item URL, which carries the project
+in its path. If the ID is not in the project it tried, it says so explicitly —
+*"Bug #141827 was not found in the `HRM` project"* — with the Azure DevOps error,
+and waits for you to give it the right project name (or a corrected ID) before
+fetching again. It never sweeps other projects looking for the ID.
+
 Before investigating, it shows you what it fetched — title, state, a short
 summary, attachment names — and **waits** for you to confirm it is the right bug.
 
-**It moves the status twice.** As soon as you confirm the bug it sets the work
-item to `Under Investigation`, before it reads anything, so the board shows the
-bug is being worked. Later, once the fix is written and you confirm it works, it
-asks and moves the work item to `Dev In Progress`. It does not gate on the state
-it found — if the bug looks like someone else is already on it, it says so and
+**It moves the status twice.** Once it has read the bug and confirmed there is
+enough to troubleshoot, it sets the work item to `Under Investigation`, so the
+board shows the bug is being worked — a bug it cannot investigate is left exactly
+as it found it. Later, once the fix is written and you confirm it works, it asks
+and moves the work item to `Dev In Progress`. It does not gate on the state it
+found — if the bug looks like someone else is already on it, it says so and
 leaves the decision to you.
 
 It reads the work item — description, comments, linked items and every attachment
@@ -206,7 +214,9 @@ It reads the work item — description, comments, linked items and every attachm
 and waits. Answer any of them and it re-assesses and carries on — no waiting on
 the reporter for something you already know. Only if you cannot answer either do
 you tell it to post the questions as a comment on the work item, which ends the
-run. It never comments on the ticket unprompted. Then it **hands the bug to
+run — and that comment always **@mentions whoever reported the bug**, so the
+questions reach them instead of waiting to be noticed. It tells you who it will
+mention before you agree, and never comments on the ticket unprompted. Then it **hands the bug to
 the Superpowers `systematic-debugging` skill**, running in a subagent, which finds
 the root cause and later writes the fix. `phx_debugger` itself never debugs and
 never edits code: it owns Azure DevOps, your approval gates and the RCA. It
@@ -215,12 +225,13 @@ diff. After you confirm the fix works it writes the full RCA into the work item'
 `Custom.*` fields and moves the status to `Dev In Progress`, asking before each. It never commits,
 pushes or opens a PR unless you say so.
 
-Modes: `quick`, `smart` (work only in the checked-out branch), `balanced`
-(default), `advanced`.
+There are no modes. How wide to search and whether to sweep the branches is the
+investigation's call, and it reports what it checked and what it skipped.
 
-**Three hard gates run before anything else** — a connected Azure DevOps MCP
-server, the `superpowers` plugin, and a valid bug ID. Any one of them missing
-ends the run with an explanation, having read nothing and touched nothing. The two you install once:
+**Four hard gates run before anything else** — a connected Azure DevOps MCP
+server, the `superpowers` plugin, a valid bug ID, and a work item that actually
+resolves. Any one of them failing ends the run with an explanation, having read
+nothing and touched nothing. The two you install once:
 
 1. The **`superpowers` plugin**:
    `/plugin install superpowers@claude-plugins-official`, then restart.

@@ -1,26 +1,27 @@
 ---
 name: phx_debugger
-description: Fixes an Azure DevOps bug end to end from its bug ID — reads the work item, delegates root cause and fix to the Superpowers systematic-debugging skill in subagents, then writes the RCA back and moves the status, gating on the developer's approval at each step. Use whenever a message carries an ADO bug ID or work item URL with a request to investigate, debug, root-cause or fix it — "fix bug 141827", "why is AB#141827 happening", a pasted _workitems/edit link. The bug ID is required; three hard gates (ADO MCP server, superpowers plugin, valid ID) stop the run before anything is read or touched.
+description: Fixes an Azure DevOps bug end to end from its bug ID — reads the work item, delegates root cause and fix to the Superpowers systematic-debugging skill in subagents, then writes the RCA back and moves the status, gating on the developer's approval at each step. Use whenever a message carries an ADO bug ID or work item URL with a request to investigate, debug, root-cause or fix it — "fix bug 141827", "why is AB#141827 happening", a pasted _workitems/edit link. The bug ID is required; four hard gates (ADO MCP server, superpowers plugin, valid ID, a work item that resolves) stop the run before anything is read or touched.
 ---
 
 # ❄️ PHX Debugger
 
-Fix an Azure DevOps bug end to end, with the developer approving at each real decision — with root cause investigation driven by the **Superpowers `systematic-debugging`** skill.
+Fix an Azure DevOps bug end to end, with the developer approving at each real decision — with root
+cause investigation driven by the **Superpowers `systematic-debugging`** skill.
 
-Nothing here improvises: the investigation and the fix are `systematic-debugging`'s four phases, run in subagents under a single rule — *no fixes without root cause investigation first.* Phases 1–3 at Step 3, Phase 4 at Step 5, with your approval in between.
+Nothing here improvises: the investigation and the fix are `systematic-debugging`'s four phases, run
+in subagents under a single rule — *no fixes without root cause investigation first.* Phases 1–3 at
+Step 3, Phase 4 at Step 5, with the developer's approval in between.
 
 ## The greeting
 
-The developer should know immediately what they have started and what powers it.
+Print the banner **after Step 0e has fetched the work item** — it names the bug by title, and you do
+not have the title before then. Order: gates (0a, 0c) → bug ID (0d) → fetch (0e) → banner → the
+confirmation stop at 0f. Never print it with a placeholder title, and never print it at all if a gate
+stopped the run — a banner above a refusal reads as though the run started.
 
-**It comes after Step 0, not before it.** The banner names the bug by title, and you do not have the
-title until Step 0e has fetched the work item — so the order is: gates (0a, 0c) → resolve the bug ID
-(0d) → fetch the work item (0e) → *then* this banner, immediately
-followed by the confirmation gate in Step 0f. Never print it with a placeholder title, and **never
-print it at all if any of the four gates stopped the run** — a banner above a refusal reads as though
-the run started.
-
-Print it exactly like this, filled in:
+Print it **inside a fenced code block**, exactly as fenced here: the alignment is load-bearing and
+only a code fence preserves it. Never pad the indentation with `&nbsp;` — the terminal renders that
+literally.
 
 ```
 ❄️ ─────────────────────────────────────────────── ❄️
@@ -29,26 +30,25 @@ Print it exactly like this, filled in:
 ❄️ ─────────────────────────────────────────────── ❄️
 
   Bug         #<id> — <title>
+  Project     <System.TeamProject>
   Code        <working directory>
-  Mode        <mode>
   ADO access  <mcp server name> (MCP) — the only path, no CLI fallback
   Superpower  systematic-debugging, in a subagent — it finds the cause
               and writes the fix. I handle ADO, your gates and the RCA.
               Iron Law: root cause before any fix
 
-  I stop and wait at the plan, and again after you test.
-  Nothing is committed, pushed or PR'd unless you ask.
+  I stop for your approval before anything changes — the bug, the plan,
+  the fix, the RCA and the status. Nothing is committed, pushed or PR'd
+  unless you ask.
 ```
 
 Warm, short and factual. Do not pad it, and never let it claim a step that has not run.
 
-**Print it inside a fenced code block**, exactly as fenced above — the alignment is load-bearing and only a code fence preserves it. Never reproduce the banner as ordinary markdown, and never pad the indentation with `&nbsp;` or any other HTML entity: the terminal renders those literally and the title comes out as `&nbsp;&nbsp;&nbsp;&nbsp; P H X   D E B U G G E R`.
-
 ## ❄️ Marking where Superpowers is used
 
-`systematic-debugging` does not run inside you — it runs in the subagents you spawn at Step 3 and
-Step 5b. The developer must still see, at a glance, which parts of the run came from there. Wrap
-those stretches in an ice-marked block:
+`systematic-debugging` runs in the subagents you spawn at Steps 3 and 5b, not in you. Wrap those
+stretches — the delegation and the findings you relay — in an ice-marked block, so the developer can
+see at a glance which parts came from the superpower:
 
 > ❄️ **SUPERPOWERS · systematic-debugging** — *investigator subagent, Phases 1–3*
 >
@@ -56,133 +56,120 @@ those stretches in an ice-marked block:
 >
 > ❄️ *end Phases 1–3 — root cause: `RequisitionsDA.cs:737` misreads the engine's `-1` sentinel*
 
-Rules for the marker:
-
-- **❄️ opens and closes** every superpowered stretch — the delegation at Step 3, the delegation at
-  Step 5b, and the findings you relay from either. Never leave one unclosed.
-- Name **which subagent and which phases** in the opening line and the **conclusion** in the closing
-  one.
-- Everything else — the ADO reads, the gates, the RCA, the status change — is your own work. Do not
-  ice-mark it, or the marker stops meaning anything.
-- One honest limit: a skill cannot set terminal colours, so the "frozen ice" is the ❄️ glyph, the
-  blockquote and the bold header — not a literal blue. Say so plainly if asked.
+Every ❄️ block opens and closes. Name the subagent and phases in the opening line and the conclusion
+in the closing one. Everything else — the ADO reads, the gates, the RCA, the status change — is your
+own work; do not ice-mark it, or the marker stops meaning anything. A skill cannot set terminal
+colours, so the marker is the glyph and the blockquote, not a literal blue. Say so plainly if asked.
 
 ## How this skill is invoked
 
 It ships inside the `org-standards` plugin, so the slash command carries the plugin prefix:
 
 ```
-/org-standards:phx_debugger <bugId or work item URL> [mode] [extra code paths]
+/org-standards:phx_debugger <bugId or work item URL> [extra code paths]
 ```
 
-It is equally valid to describe the job in plain language — *"fix ADO bug 141827"*. Both paths run
-the same procedure from Step 0; nothing below is conditional on how you were called.
-
-**The bug ID is the one required argument.** Everything else has a default. See Step 0d — a run
-without an ID does not start.
+Plain language is equally valid — *"fix ADO bug 141827"*. Both paths run the same procedure from
+Step 0. **The bug ID is the one required argument**; see Step 0d.
 
 ### Where the code is
 
 **The session's working directory is the codebase.** Claude Code is launched from the repository
-being debugged, so there is no "path to the code" to ask for and none to guess at. Take the current
-working directory as the code under investigation, confirm what it is with `git rev-parse
---show-toplevel`, and say which directory you are working in when you print the banner.
+being debugged, so there is no "path to the code" to ask for and none to guess at. Confirm what it is
+with `git rev-parse --show-toplevel` and name it in the banner.
 
 Do **not** ask the developer for a code path up front. If the working directory turns out to be the
-wrong repository, that surfaces later and from the investigation, not from you: the investigator's
-*find the true repository* check (`reference\debugging-brief.md`) compares the bug's symbols against
-an org-wide code search and **stops, returning the mismatch**. You then put it to the developer — the
-evidence points at repository X, you have Claude Code open on Y, do they want to reopen there or hand
-you that path. It is a mismatch to raise, not a missing argument to collect.
+wrong repository, that surfaces from the investigation: the investigator compares the bug's symbols
+against an org-wide code search and **stops, returning the mismatch** (`reference\debugging-brief.md`).
+You then put it to the developer — the evidence points at repository X, you have Claude Code open on
+Y, do they want to reopen there or hand you that path. It is a mismatch to raise, not a missing
+argument to collect.
 
 If the bug reaches into a **dependency** whose source is outside this repository — a shared library,
 a sibling service, a second checkout — the developer supplies those paths when they invoke the skill,
 as trailing arguments or in plain language (*"…the engine is in `D:\Code\ApprovalEngine`"*). Put any
 such path into the context packet (Step 3a) as an additional read location **for the subagent**; you
 do not read there yourself. If the investigation needs one that was not supplied, it comes back in
-the return's open questions and you ask for that specific path — a real question, not a guess.
+the return's open questions and you ask for that specific path.
 
-## Modes
+### Depth is the investigator's call
 
-The mode sets how deep to go. Default is **balanced**. It changes *how much you verify* — never
-whether a gate can be skipped, a finding invented, or something claimed unchecked.
+There are no modes. How wide to search, whether to hunt for the true repository, whether to sweep the
+branches — the investigator decides from the evidence and **states in its return what it checked and
+what it skipped, and why** (`reference\debugging-brief.md`). Never let a partial sweep be presented
+as complete; relay the skipped coverage in the plan (Step 4) and again at Step 8.
 
-| Mode | Scope |
-|---|---|
-| **quick** | Essentials only: read the bug, find the code path, root cause, short plan. **No branch sweep** — it costs one MCP call per branch now; say you skipped it. Narrow the search rather than widening it — this trades coverage for speed, never rigour, and it does **not** license asking the developer something the code would have answered. |
-| **smart** | **Work only in the branch already checked out** in the working directory. No repo hunting, no branch sweep — the checkout is the answer. **No build and no test either** — the developer runs those — and nothing committed or pushed. Full reasoning depth inside that narrow scope. |
-| **balanced** *(default)* | The full procedure below, at normal depth. |
-| **advanced** | Thoroughness over speed. Trace the defect to the commit that introduced it, **prove** the affected version range rather than asserting it, sweep every branch, check siblings, surface risks the ticket does not mention. |
-
-**`smart` suppresses the build.** The implementer normally builds the affected project (Step 5b); in
-`smart` it must be told not to, and you hand back the diff with the build explicitly marked as not
-run. Do not let that read as verified.
-
-Most of what mode governs is investigation depth, and investigation is the subagent's. **Pass the
-mode in the context packet** (Step 3a) and pass it again to the implementer;
-`reference\debugging-brief.md` is what tells them what each mode means for the branch sweep, the
-search breadth and the build. Treat that file as authoritative on those specifics rather than
-restating them here. What mode changes for *you* is how much you relay and how hard you push back on
-a thin return.
-
-Depth of *procedure* is set here. Depth of *reasoning* is the session's model and effort, which a
-skill cannot change — so if the bug is hard, say so and suggest the developer run `/model opus` and
-raise effort. A narrow scope at high reasoning beats a wide scope at low.
+Depth of *reasoning* is the session's model and effort, which a skill cannot change — so if the bug
+is hard, say so and suggest `/model opus` and a higher effort. A narrow scope at high reasoning beats
+a wide scope at low.
 
 ## Plan mode
 
-Analysis must be read-only, and implementation must not be. Manage that explicitly:
+Analysis must be read-only, and implementation must not be:
 
-- **Call `EnterPlanMode` before Step 1.** Everything through Step 4 is investigation; in plan mode
-  you physically cannot edit the developer's files, which is the guarantee that a half-formed idea
-  never reaches their working tree.
-- **The investigator subagent inherits that constraint and is told it explicitly** (Step 3b): it
-  reads, it does not edit. Plan mode is the mechanism; the instruction is the belt to its braces.
-- **Write the plan, then call `ExitPlanMode`** to present it for approval. Approval is what grants
-  edit rights — which you then hand to the implementer subagent at Step 5b, not use yourself.
+- **Steps 0–2 need no plan mode** — they are MCP reads plus the two writes this skill makes early
+  (the state change at Step 2a, and the Step 2 comment if the developer asks for it). Keeping them
+  outside plan mode is what stops plan mode blocking an Azure DevOps write.
+- **Call `EnterPlanMode` at Step 2a**, immediately after the state change and before the Step 3
+  delegation. Steps 3–4 are investigation; in plan mode no source edit can reach the developer's
+  working tree. (Saved ticket attachments *do* land in their repository — see Step 1. Plan mode
+  guarantees no code is edited, not that nothing is written.)
+- **The investigator subagent is told the same constraint explicitly** (Step 3b): it reads, it does
+  not edit.
+- **Write the plan, then call `ExitPlanMode`** to present it. Approval grants edit rights — which you
+  hand to the implementer subagent at Step 5b, and never use yourself.
 
-Do not ask the developer to toggle modes by hand. If you find yourself blocked from writing after
-the plan was approved, you are still in plan mode — say so and exit it rather than retrying.
+Do not ask the developer to toggle modes by hand. If you find yourself blocked from writing after the
+plan was approved, you are still in plan mode — say so and exit it rather than retrying.
 
-The sequence is fixed:
+## The sequence
 
 ```
-0a MCP gate ──missing──▶ stop     0c Superpowers gate ──missing──▶ stop
-      │                                 │
-      └────────────────▶ ───────────────┘
-                        │
-                        ▼
+0a MCP gate ──missing──▶ stop        0c Superpowers gate ──missing──▶ stop
+      │                                    │
+      └──────────────────▶ ────────────────┘
+                          │
+                          ▼
       0d bug ID ──none or malformed──▶ ask, wait
-                        │
-                        ▼
-      0e fetch + validate the bug ──not found / not a Bug──▶ report the error, stop
-                        │
-                        ▼
+                          │
+                          ▼
+      0e fetch ──404──▶ "not found in <project>", ask for the project, wait ─▶ 0e
+         │      ──not a Bug──▶ say what it is, ask
+         │  (0b: the project the developer named, else HRM;
+         │   System.TeamProject from the response wins from here on)
+         ▼
       greeting ─▶ 0f confirm this is the bug [STOP]
-                        │
-                        ▼
-      0g state ─▶ "Under Investigation" ─▶ 1 read the bug in full
-                                          │
-                                          ▼
-      2 SUFFICIENT? ──no──▶ ask the developer [STOP] ─┬─answered──▶ re-assess
-                 │yes                                 └─"comment"──▶ comment, stop
-                 │
+                          │
+                          ▼
+      1 read the bug in full — comments, links, every attachment
+                          │
+                          ▼
+      2 SUFFICIENT? ──no──▶ tell the developer, ask [STOP] ─┬─answered──▶ re-assess
+                 │                                          └─"comment"──▶ comment, stop
+                 │yes                                           (status unchanged)
                  ▼
+      2a status ─▶ "Under Investigation" ─▶ EnterPlanMode
+                          │
+                          ▼
       3 delegate ──▶ ❄️ investigator subagent · systematic-debugging Phases 1–3
                  ◀── root cause + proposed fix + RCA material
-                 │
-                 ▼
-      4 present the plan [STOP] ─▶ 5a branch ─▶ 5b delegate
-                                      ──▶ ❄️ implementer subagent · Phase 4
-                                      ◀── diff + build result
-                 │
-                 ▼
+                          │
+                          ▼
+      4 present the plan ─▶ ExitPlanMode [STOP]
+                          │
+                          ▼
+      5a branch ─▶ 5b delegate ──▶ ❄️ implementer subagent · Phase 4
+                                ◀── diff + build result
+                          │
+                          ▼
       5c hand back [STOP] ─▶ 5d assemble the RCA from both returns
-                 ─▶ 6 RCA onto the work item ─▶ 7 status "Dev In Progress" ─▶ done
+                          │
+                          ▼
+      6 RCA onto the work item ─▶ 7 status "Dev In Progress" ─▶ 8 summarise
 ```
 
-You never read or edit source yourself. Steps 3 and 5b are where the code work happens, and both of
-them happen inside a subagent running `superpowers:systematic-debugging`.
+You never read or edit source yourself. Steps 3 and 5b are where the code work happens, and both
+happen inside a subagent running `superpowers:systematic-debugging`.
 
 ---
 
@@ -190,9 +177,8 @@ them happen inside a subagent running `superpowers:systematic-debugging`.
 
 **Every** read from and write to Azure DevOps in this skill — work item, comment, attachment, field,
 state, code search, file, branch, commit, pull request — goes through the **Azure DevOps MCP server**
-(`microsoft/azure-devops-mcp`). There is no second path and no fallback.
-
-This is not a preference. It is the condition on which the skill runs at all.
+(`microsoft/azure-devops-mcp`). There is no second path and no fallback. This is the condition on
+which the skill runs at all, and it binds the subagents exactly as it binds you.
 
 **Forbidden, without exception:**
 
@@ -204,108 +190,101 @@ This is not a preference. It is the condition on which the skill runs at all.
 | A PowerShell or shell script that talks to Azure DevOps — yours or one you find lying about | to work around a missing MCP tool |
 | `git fetch`/`git push` against an ADO remote **as a substitute** for an MCP call | reading a file the MCP server could return |
 | Asking the developer to paste output from any of the above | "just this once" |
-| **Finding a work item by title, text or any field** — see *the second law* below | "the ID 404'd, so let me search for it" |
+| **Finding a work item by title, text or any field** — see *the second law* | "the ID 404'd, so let me search for it" |
 
 `git` on the **local checkout you are running in** is still fine and still expected —
-`git rev-parse`, `git log`, `git diff`, `git checkout` are local-working-tree operations, not Azure
-DevOps API calls. The line is the network boundary: anything that talks to the ADO service goes
-through MCP.
+`git rev-parse`, `git log`, `git diff`, `git checkout` are local-working-tree operations. The line is
+the network boundary: anything that talks to the ADO service goes through MCP.
+
+**Never negotiate around this.** Not if the developer says "just use the CLI this once", not if they
+offer you a PAT, not if the bug is urgent. Say plainly that this skill has no fallback path and that
+`az devops` is theirs to run in their own terminal — you will not run it and will not act on ADO data
+obtained that way. If an MCP **call** fails — auth expired, org wrong, project not found — report the
+tool's own error verbatim, say what it means, and stop. The one exception is Step 0e's work-item
+404, which has its own recovery: name the project you tried and ask for the right one. A failing call is never a reason to switch
+transport. The same applies mid-run: if the server drops out at Step 5, the run stops at Step 5 with
+the work so far reported honestly.
+
+An earlier version of this skill reached Azure DevOps through a PAT-authenticated PowerShell script.
+That path is gone, and so are the scripts. If you find a `config.json` holding a PAT left over from
+that era beside a developer's checkout, tell them to revoke the token and delete the file. Do not use
+it.
 
 ### The second law: work item lookup is **by ID only**
 
-A work item enters this run in exactly one way: **you fetch it by its numeric ID.**
-`wit_work_item` · `get`, or `wit_work_item` · `get_batch` for several at once. That is the whole
-list.
+A work item enters this run in exactly one way: **you fetch it by its numeric ID** —
+`wit_work_item` · `get`, or `get_batch` for several at once.
 
 **You must never find a work item by its content.** No `search_workitem`, no WIQL query, no
 list-by-query, no filtering a result set — not by title, description, repro steps, tag, area path,
-iteration, assignee, state or date. If a tool in your list takes free text and returns work items,
-it is out of bounds for the entire run.
+iteration, assignee, state or date. If a tool in your list takes free text and returns work items, it
+is out of bounds for the entire run.
 
-The IDs you are allowed to fetch are:
+The IDs you may fetch are:
 
 1. the ID from Step 0d — the one the developer gave you; and
-2. any ID you read out of a `relations[]` link on a work item you already hold — a parent, a child,
-   a "related" or a "duplicate of". Those arrive **as IDs**, so following them is still an ID
-   lookup, and Step 1 depends on it: a bug copied across version lines routinely has an empty
-   description and every useful detail on its sibling.
+2. any ID you read out of a `relations[]` link on a work item you already hold — a parent, a child, a
+   "related", a "duplicate of". Those arrive **as IDs**, so following them is still an ID lookup, and
+   Step 1 depends on it: a bug copied across version lines routinely has an empty description and
+   every useful detail on its sibling.
 
 Nothing else. You do not go looking for a work item that nobody linked and nobody named.
 
-#### This does **not** restrict code search
+**This does not restrict code search.** `search_code` by symbol name, error string, message template
+or setting key is required — it is how the investigator finds the true repository and traces the
+failing path. The distinction is the object, not the verb: searching for a *work item* is forbidden,
+searching for *code* is not.
 
-`search_code` by symbol name, error string, message template or setting key is not just allowed, it
-is **mandatory** — it is how the investigator finds the true repository and traces the failing path
-(`reference\debugging-brief.md`). The subagent inherits this law in full, and this carve-out with it.
-The two rules sit side by side without conflict:
+#### When the ID does not resolve, **ask which project** — do not go looking
 
-| Searching for… | |
-|---|---|
-| **work items** by their text | ❌ forbidden — for you and for the subagents |
-| **code** by its text | ✅ required — the subagent's, not yours |
+If `wit_work_item` · `get` returns 404 or "work item does not exist", the ID and the project are two
+separate suspects — and when you defaulted to `HRM` at Step 0b, the project is the likelier one. Stop
+and say exactly where you looked:
 
-The distinction is the object, not the verb. Searching is fine; searching *for a work item* is not.
+> ❄️ **Bug #141827 was not found in the `HRM` project.**
+>
+> `<the tool's own error, verbatim>`
+>
+> I looked in `HRM`, the project I use when the message does not name one. If this bug lives in a
+> different Azure DevOps project, give me that project name and I will fetch the same ID from there.
+> Otherwise the ID may be mistyped, in another Azure DevOps organization, or not visible to your
+> account — re-check it and I will carry on.
+>
+> I have not read anything or touched your code.
 
-#### When the ID does not resolve, **stop** — do not go looking
-
-This is the rule's whole reason for existing, so it does not bend. If `wit_work_item` · `get`
-returns 404 or "work item does not exist":
-
-- **Report the tool's own error verbatim**, say the ID did not resolve and name the likely reasons —
-  a mistyped digit, a work item in a different Azure DevOps organization from the one your MCP
-  server points at, or one your account cannot see.
-- **Ask the developer to re-check the ID**, and wait. When they give you a corrected one, go back to
-  Step 0e with it.
-- **Do not post anything to Azure DevOps.** There is no valid work item to comment on — that is what
-  the 404 means.
-- **Do not search for it.** Not by the title the developer mentioned in chat, not by the words in
-  their message, not "to check whether it was renumbered". The reflex to recover a failed lookup by
-  full-text search is exactly what this law exists to stop: it finds a *similar* bug, the run
-  proceeds confidently on the wrong one, and Step 6 writes an RCA onto somebody else's ticket. A
-  wrong ticket is far more expensive than a stopped run.
-
-### If the MCP server is missing, fail safely — do not improvise
-
-If the server is not connected, or the specific tool you need is not exposed by it, you **stop**.
-You do not reach for the CLI, you do not reach for REST, and you do not write a script to do it
-instead. You say what was missing and what would fix it, and you end the run. A run that stops with
-nothing done is a correct outcome here; a run that quietly used a PAT is not.
-
-The same applies mid-run. If the MCP server drops out at Step 5, the run stops at Step 5 with the
-work so far reported honestly — it does not finish over REST.
-
-An earlier version of this skill reached Azure DevOps through a PAT-authenticated PowerShell script.
-That path is gone, and so are the scripts. The org knowledge they carried — the PHR bug field
-reference names, the HTML conventions, why RCA content never goes in `System.History`, why picklists
-come from `allowedValues` — lives in this file and in `reference\rca-template.md`. If you find a
-`config.json` holding a PAT left over from that era beside a developer's checkout, tell them to
-revoke the token and delete the file. Do not use it.
+- **Always name the project you actually tried.** A bare "not found" reads as *this bug does not
+  exist*, which is a different — and usually wrong — claim. Use the same wording when the project was
+  one the developer named: *"Bug #141827 was not found in the `Payroll` project."*
+- **Report the tool's own error verbatim** alongside it.
+- **Then wait.** A project name means re-running Step 0e with the same ID against that project; a
+  corrected ID means re-running Step 0e with the new ID against the project you already have. Either
+  is an ordinary retry — nothing has been read or written, so resuming is safe, and you do not make
+  them re-invoke the skill.
+- **One project per attempt, and only ones you were given.** Do not work through projects on your own
+  — no `core_list_projects` sweep, no trying the neighbouring version line "just in case". If the
+  project the developer names also comes back not-found, report that the same way and ask again.
+- **Do not post anything to Azure DevOps.** There is no valid work item to comment on.
+- **Do not search for it.** Not by the title mentioned in chat, not by the words in their message,
+  not "to check whether it was renumbered". Recovering a failed lookup by full-text search finds a
+  *similar* bug, the run proceeds confidently on the wrong one, and Step 6 writes an RCA onto
+  somebody else's ticket. A wrong ticket is far more expensive than a stopped run.
 
 ---
 
 ## The rule that outranks the rest: ask, don't guess
 
 **If you are in doubt, stop and ask the developer.** A wrong fix applied confidently is far more
-expensive than a question. This is an explicit requirement of this skill, not a fallback.
+expensive than a question.
 
-### But exhaust the evidence first — asking is not an escape from investigation
+### But exhaust the evidence first
 
-A question is right when the answer **cannot be found in the code**. It is wrong when it is standing
-in for work that has not been done, and it is the single most common way a run comes back weaker
-than it should be.
-
-Because you do not read the code yourself, this rule reaches you in two ways:
+A question is right when the answer **cannot** be found in the code. It is wrong when it stands in
+for work that has not been done. Because you do not read the code yourself, this reaches you twice:
 
 - **Before you ask about anything code-shaped, send it to the subagent instead.** "What does the
-  engine return here?" is not a question for the developer, and it is not a question for you either
-  — it is a task for the investigation. The same brief binds it: read the file end to end, follow
-  the call chain out of this repo, open the binary when the logic is compiled, check the sibling
-  module, re-read the attachments.
+  engine return here?" is a task for the investigation, not a question for anybody.
 - **Before you pass on a question the subagent raised**, check it is genuinely the developer's to
-  decide and not something the investigation could have settled. If it is the latter, send it back.
-
-Only then ask. And ask about the thing that is genuinely the developer's to decide, not about the
-fact nobody chased down.
+  decide. If the investigation could have settled it, send it back.
 
 | Not a question — go and find out | A real question |
 |---|---|
@@ -313,39 +292,33 @@ fact nobody chased down.
 | "Is this a code bug or a config problem?" | "Ship the one fix in scope, or fix all six call sites in this PR?" |
 | "Which method handles self-approval?" | "This changes shared behaviour across four modules — do you want that blast radius?" |
 
-The left column is answered by a decompiler, a wider read, or one more search — send it back to the
-subagent. The right column is answered only by a person, because it is a product decision.
-
-**One decision point with your recommendation beats three open questions.** If you must raise
-several, state the root cause definitively first, then ask — never present uncertainty about the
-cause and a menu of directions at the same time. That reads as "I could not work it out".
+**One decision point with your recommendation beats three open questions.** State the root cause
+definitively first, then ask — never present uncertainty about the cause and a menu of directions at
+the same time.
 
 ### The triggers
 
 Once the evidence is exhausted, ask — do not proceed on assumption — whenever:
 
-- The bug could plausibly have **more than one root cause** and you cannot separate them from source.
+- The bug could plausibly have **more than one root cause** and source cannot separate them.
 - The fix has **more than one reasonable shape** and they behave differently for users.
 - The right change is in code you **cannot see**: another repo, a stored procedure, config, a
   third-party component.
-- The local checkout **disagrees** with the ticket — wrong branch, stale clone, symbol named in the
+- The local checkout **disagrees** with the ticket — wrong branch, stale clone, a symbol named in the
   bug that does not exist in the code.
 - Fixing it properly means **changing shared behaviour** — a signature, a schema, an interface, a
-  base class — and you cannot see every caller.
+  base class — and not every caller is visible.
 - The ticket asks for something that **contradicts** what the code appears designed to do.
-- You would otherwise write the words *"probably"*, *"presumably"*, *"should be"* or *"I assume"*
-  in a finding.
+- You would otherwise write *"probably"*, *"presumably"*, *"should be"* or *"I assume"* in a finding.
 
 How to ask, so the answer is quick to give:
 
 1. State what the investigation established, with `file:line`.
-2. State precisely what could not be determined, and **why** — what was looked at that failed to settle it.
+2. State precisely what could not be determined, and **why** — what was looked at that failed to
+   settle it.
 3. Give the options you see, each with its consequence.
 4. Say which one you would choose and why.
 5. Stop. Wait. Do not carry on with your preferred option while asking.
-
-A question that reads *"which of these two, and here's what I'd pick"* takes ten seconds to answer.
-*"I'm not sure, please advise"* takes ten minutes and gets a worse answer.
 
 ---
 
@@ -353,36 +326,38 @@ A question that reads *"which of these two, and here's what I'd pick"* takes ten
 
 - **You do not debug and you do not edit code.** Root cause and fix both belong to
   `superpowers:systematic-debugging`, running in a subagent (Steps 3 and 5b). Your half is Azure
-  DevOps, the developer's gates, and the RCA. Doing a "quick look at the source" yourself is the one
-  habit that breaks this skill — it produces a second, weaker investigation alongside the real one.
-- **Verify before you claim.** Every factual statement about the code must come from the subagent's
-  return, quoted as such. No recalled behaviour, no inference presented as fact, and nothing you
-  added to make the story hang together.
+  DevOps, the developer's gates, and the RCA. A "quick look at the source" yourself is the one habit
+  that breaks this skill — it produces a second, weaker investigation alongside the real one.
+- **Verify before you claim.** Every factual statement about the code must come from a subagent
+  return, quoted as such. No recalled behaviour, no inference presented as fact, nothing added to
+  make the story hang together.
 - **An RCA already on the ticket is a claim, not a fact.** Prior RCAs are frequently written against
   a different repo or a stale snapshot. Pass it to the subagent flagged as unverified; if it does not
   hold against source, say so plainly in the plan and give the corrected version.
-- **Azure DevOps only through the MCP server.** See *The law* above. No CLI, no REST, no script, no
-  PAT. If the tool is not there, stop.
-- **Work items are fetched by ID, never found by content.** See *the second law*. The ID the
-  developer gave you, plus any ID reachable through a `relations[]` link — nothing else. An ID that
-  does not resolve ends the run; it never becomes a title search.
-- **The three Step 0 gates are absolute.** No ADO MCP server (0a), no `superpowers:systematic-debugging`
-  (0c), or no valid bug ID (0d) each end the run with nothing read and
-  nothing touched. None of them has a degraded mode, a "just this once", or a repair you apply
-  yourself — and you never write to Azure DevOps to make a gate pass.
-- **The only two states this skill sets are `Under Investigation` (Step 0g) and `Dev In Progress`
-  (Step 7).** It does not gate on the state it found, and it never moves a bug anywhere else.
-- **Never commit, push, or create a pull request** unless the developer explicitly approves that step.
+- **Azure DevOps only through the MCP server, and work items only by ID.** See the two laws above.
+- **The four Step 0 gates are absolute** — no ADO MCP server (0a), no `superpowers:systematic-debugging`
+  (0c), no valid bug ID (0d), no work item that resolves (0e). Each ends the run with nothing read
+  and nothing touched. None has a degraded mode or a repair you apply yourself, and you never write
+  to Azure DevOps to make a gate pass.
+- **The only states this skill sets on its own initiative are `Under Investigation` (Step 2a) and
+  `Dev In Progress` (Step 7).** It does not gate on the state it found. Any other state change
+  happens only when the developer explicitly asks for it, and the target always comes from
+  `get_type`'s `states[]`.
+- **The status does not move until the bug is known to be workable.** `Under Investigation` is
+  written only after Step 2 returns SUFFICIENT — an insufficient bug is left exactly as found.
+- **Never commit, push, or create a pull request** unless the developer explicitly approves it.
 - **Never write RCA content into `System.History`.** It belongs in the `Custom.*` fields.
-- **Stop where the procedure says stop.** Presenting a plan and then implementing it in the same
-  turn defeats the point of the gate.
+- **Stop where the procedure says stop.** Presenting a plan and then implementing it in the same turn
+  defeats the point of the gate.
 
 ## The Azure DevOps operations, as MCP tools
 
 The server exposes **action-dispatch** tools: one tool name, an `action` parameter selecting the
-operation. In Claude Code the tools appear as `mcp__<server>__<tool>`, where `<server>` is whatever
-the developer named it in their MCP config — `mcp__ado__wit_work_item` if they used `ado`, the
-recommended name. **Read the actual names from your tool list; never assume the prefix.**
+operation. In Claude Code they appear as `mcp__<server>__<tool>`, where `<server>` is whatever the
+developer named it — `mcp__ado__wit_work_item` if they used `ado`, the recommended name. **Read the
+actual names from your tool list; never assume the prefix.**
+
+**Yours:**
 
 | What you need | Tool · action |
 |---|---|
@@ -390,34 +365,33 @@ recommended name. **Read the actual names from your tool list; never assume the 
 | Its comments | `wit_work_item` · `list_comments` |
 | Related / parent items in one call | `wit_work_item` · `get_batch` |
 | An attachment's bytes | `wit_work_item_attachment` |
-| Allowed **states** and **field allowed values** for the type | `wit_work_item` · `get_type` |
+| Allowed **states** and field `allowedValues` for the type | `wit_work_item` · `get_type` |
 | Post a comment to a person | `wit_work_item_comment_write` · `add`, `format: "Html"` |
 | Write RCA fields / move state | `wit_work_item_write` · `update` |
-| Org-wide code search — finds the *real* repo | `search_code` |
-| Repository inventory | `repo_repository` · `list` |
-| Branch inventory | `repo_branch` · `list` |
-| One file at one branch | `repo_file` · `get_content` |
-| History for a file | `repo_search_commits` |
-| Create a branch | `repo_create_branch` — only after explicit approval |
+| The project list — **not** for choosing the project to fetch a bug from; Step 0b decides that | `core_list_projects` |
+| Branch inventory, for the naming convention at Step 5a | `repo_branch` · `list` |
+| Create a branch in ADO | `repo_create_branch` — only after explicit approval |
 | Create a pull request | `repo_pull_request_write` · `create` — only after explicit approval |
 | **Finding a work item you have no ID for** | **nothing — there is no tool for this here.** Any work-item search or WIQL tool the server exposes is out of bounds for the whole run |
 
-### Three things that will bite you on the tools you use
+**The subagents', not yours** — listed so the names live in one place; the rules for them are in
+`reference\debugging-brief.md`: `search_code` (org-wide code search, finds the real repo), `repo_file`
+· `get_content` (one file at one branch), `repo_search_commits` (history for a file).
+
+### Three things that will bite you
 
 1. **`wit_work_item_write` · `update` supports only `add`, `replace` and `remove`.** There is **no
-   `test` op**, so the `/rev` concurrency guard the old script used is not available. See
-   *Step 6* for what to do instead — do **not** solve this by going around the MCP server.
+   `test` op**, so a `/rev` concurrency guard cannot be expressed. See Step 6 for what to do instead —
+   do **not** solve it by going around the MCP server.
 2. **`wit_work_item_attachment` takes an attachment GUID, not a URL**, and its `savePath` must be a
-   **relative** path. Pull the GUID out of the relation URL:
-   `…/_apis/wit/attachments/{attachmentId}`.
-3. **`wit_work_item` · `get_type` is the only source of truth for states and picklist
-   `allowedValues`.** Never type either from memory — this org has 21 states for Bug alone. See
-   Steps 6 and 7.
+   **relative** path. Pull the GUID out of the relation URL: `…/_apis/wit/attachments/{attachmentId}`.
+3. **`wit_work_item` · `get_type` is the only source of truth for state names and picklist
+   `allowedValues`.** Never type either from memory — this org has 21 states for Bug alone. Fetch it
+   once at Step 2a and reuse that response at Steps 6 and 7.
 
 The repository-side traps — `repo_file`'s `versionType` defaulting to `Commit`, `search_code`'s
-`top: 5` default, and the fact that there is no single-call branch sweep any more — belong to the
-subagent, and `reference\debugging-brief.md` carries them. They are not repeated here, so that they
-cannot drift apart.
+`top: 5` default, and the absence of a single-call branch sweep — belong to the subagent, and
+`reference\debugging-brief.md` carries them. They are not repeated here, so they cannot drift apart.
 
 ---
 
@@ -425,36 +399,30 @@ cannot drift apart.
 
 ### Step 0a — Is the Azure DevOps MCP server connected? **Hard gate**
 
-Do this **first**, before the greeting. Everything downstream depends on it, and there is no
-degraded mode to fall back to.
+Do this **first**, before the greeting. There is no degraded mode to fall back to.
 
-**Look at your own tool list.** Every tool this procedure calls must be present *before* you start —
-a missing one discovered at Step 5 has already cost the developer their whole run. Check all of
-these, matching on the suffix after the server prefix:
+**Look at your own tool list** and match on the suffix after the server prefix. Four tools are needed
+on every single run, and their absence ends it here:
 
 | Tool | Used at |
 |---|---|
-| `wit_work_item` | 0e, 0g, 1, 6, 7 — fetch, comments, `get_type` |
-| `wit_work_item_write` | 0g, 6, 7 — state, RCA fields, state |
-| `wit_work_item_comment_write` | 2 — the insufficient-information comment, only when the developer asks for it |
+| `wit_work_item` | 0e, 1, 2a, 6, 7 — fetch, comments, `get_type` |
+| `wit_work_item_write` | 2a, 6, 7 — state, RCA fields, state |
+| `wit_work_item_comment_write` | 2 — the insufficient-information comment, when the developer asks for it |
 | `wit_work_item_attachment` | 1 — attachments are **not** optional reading |
-| `search_code` | 3 — the subagent finds the true repository |
-| `repo_file` | 3 — reading a file at a branch |
-| `repo_branch` | 3, 5a — the branch sweep and the naming convention |
 
-`repo_search_commits`, `repo_create_branch` and `repo_pull_request_write` are used conditionally; if
-they are absent, say so at the point they are needed rather than failing the gate.
+Everything else — `search_code`, `repo_file`, `repo_branch`, `repo_search_commits`,
+`repo_create_branch`, `repo_pull_request_write`, `core_list_projects` — is conditional. Do not fail
+the gate for them; report one as absent at the point it is actually needed.
 
-Note the server prefix you actually see (`mcp__ado__…`, `mcp__azure-devops__…`, whatever it is) and
-use it for the rest of the run. Match on the **suffix**, and match it exactly — `wit_work_item` and
-`wit_work_item_write` are two different tools, and seeing one is not seeing the other.
+Note the server prefix you see (`mcp__ado__…`, `mcp__azure-devops__…`, whatever it is) and use it for
+the rest of the run. Match the suffix exactly — `wit_work_item` and `wit_work_item_write` are two
+different tools, and seeing one is not seeing the other.
 
-**Do not "verify" by calling a CLI or REST endpoint.** The tool list is the check. If ADO tools are
-absent from it, the server is not connected — there is nothing further to test.
+**Do not "verify" by calling a CLI or REST endpoint.** The tool list is the check.
 
-**If any required tool is absent, stop here.** Not "start and see how far it gets" — the run ends at
-this line, with nothing read and nothing touched. Print this, name which of the seven tools were
-missing, and end the run:
+**If any of the four is absent, stop here** — nothing read, nothing touched. Print this, naming which
+were missing, and end the run:
 
 > ❄️ **PHX Debugger needs the Azure DevOps MCP server**
 >
@@ -481,32 +449,32 @@ missing, and end the run:
 >
 > Setup detail is in this skill's `INSTALL.md`.
 
-**Never negotiate around this gate.** Not if the developer says "just use the CLI this once", not if
-they offer you a PAT, not if the bug is urgent. If they ask for a fallback path, say plainly that
-this skill does not have one and that `az devops` is theirs to run in their own terminal — you will
-not run it and will not act on ADO data obtained that way.
+### Step 0b — Which project? **`HRM` is the default**
 
-If the tools are present but a **call** fails — auth expired, org wrong, project not found — report
-the tool's own error verbatim, say what it means, and stop. A failing MCP call is never a reason to
-switch transport.
+Most tools take a `project`, and the first fetch at Step 0e needs one before you have a work item to
+read it off. Resolve it in this order:
 
-### Step 0b — Which project?
+1. **The project the developer named**, when the invoking message names one — *"bug 141827 in
+   Payroll"*, a `…/dev.azure.com/<org>/Payroll/_workitems/edit/141827` URL (the path segment after
+   the org **is** the project), or a project they gave you earlier in this run after a not-found.
+2. **`HRM` otherwise.** It is this skill's default project and you use it without asking — that is
+   where the bugs normally live. Do not call `core_list_projects`, and do not make the developer pick
+   a project up front: Step 0e's not-found path is where a wrong assumption gets corrected, cheaply,
+   before anything has been read or written.
 
-Most tools take a `project`. You do not know it yet, and you must not guess it: get it from the work
-item itself in Step 0e (`System.TeamProject`), and reuse that value everywhere afterwards. If a tool
-needs a project *before* you have fetched the bug, use `core_list_projects` and ask the developer
-rather than picking one.
+**Say which project you are fetching from**, so a defaulted `HRM` is never silent — in the Step 0e
+attempt, in the not-found message, and on the banner.
+
+Once the work item resolves, **`System.TeamProject` on the response is authoritative** — reuse that
+value for every later call, even where it differs from the project you fetched with. Never guess a
+project after that point: it is on the work item you are already holding.
 
 ### ❄️ Step 0c — Is Superpowers available? **Hard gate**
 
-This skill depends on the `superpowers` plugin. Check before the greeting, so a missing plugin is
-caught in the first five seconds rather than at Step 3.
-
 **Your own skill list is the check.** The one name that matters is `superpowers:systematic-debugging`
-— not "some superpowers skill is present", not a similarly named debugging skill from another
-plugin. If that exact skill is offered, you are ready; go on to Step 0d. Do not probe the plugin
-cache directory to "confirm" it: a plugin that is on disk but not in your skill list is not usable in
-this session either way, so the two cases have the same answer.
+— not "some superpowers skill is present", not a similarly named debugging skill from another plugin.
+If that exact skill is offered, go on to Step 0d. Do not probe the plugin cache directory to "confirm"
+it: a plugin on disk but not in your skill list is not usable in this session either way.
 
 **If it is not listed, stop here** and print this:
 
@@ -525,45 +493,24 @@ this session either way, so the two cases have the same answer.
 >
 > I have not read your bug or touched your code.
 
-**Never silently fall back.** There is no non-superpowered mode of this skill, and you must not
-improvise one by investigating ad hoc under this name. The developer chose the superpowered version;
-if it is unavailable they are entitled to know they did not get it. Stop and let them fix it.
+**Never silently fall back.** There is no non-superpowered mode, and you must not improvise one under
+this name. The developer chose the superpowered version; if it is unavailable they are entitled to
+know they did not get it.
 
 ### Step 0d — The bug ID. **Hard gate**
 
-**This skill runs on a bug ID and nothing else.** No ID, no run. No *valid* ID, no run either.
+**This skill runs on a bug ID and nothing else.** Read the invoking message and extract exactly one
+work item ID. Accept `141827`, `#141827`, `AB#141827`, `Bug 141827`, or a `…/_workitems/edit/141827`
+URL with or without a query string or trailing slash, and normalise to a bare integer.
 
-Read the invoking message and extract exactly one work item ID. Accept any of these forms and
-normalise to a bare integer:
-
-| Written as | ID |
-|---|---|
-| `141827` | `141827` |
-| `#141827`, `AB#141827`, `Bug 141827` | `141827` |
-| `https://dev.azure.com/<org>/<project>/_workitems/edit/141827` | `141827` |
-| the same URL with `?...` query string or trailing `/` | `141827` |
-
-#### What counts as a valid ID
-
-A work item ID is **a positive integer and nothing else**. After normalising, it must match
-`^[1-9][0-9]*$`. Reject anything that does not, and reject it *here* — not by sending it to Azure
-DevOps to see what happens:
-
-| Given | Verdict |
-|---|---|
-| `141827` | ✅ valid |
-| `0`, `-4` | ❌ not a work item ID |
-| `141827.0`, `14 18 27`, `141,827` | ❌ not an integer — do not "clean it up" into one |
-| `141827abc`, `AB#`, `#`, `bug` | ❌ malformed |
-| `1e5`, `0x2298B` | ❌ not decimal notation; do not evaluate it |
-| an empty string after stripping `#` / `AB#` | ❌ treat as no ID at all |
-| a URL with no numeric final segment | ❌ malformed — the ID is the last path segment of `_workitems/edit/<n>` |
-| an ID longer than 9 digits | ❌ implausible; ask rather than fetch |
+**A valid ID matches `^[1-9][0-9]*$` after normalising, and nothing else is valid.** Reject it here,
+not by sending it to Azure DevOps to see what happens. An ID longer than 9 digits is implausible —
+ask rather than fetch.
 
 **A malformed ID is a stop, not a repair.** Do not strip stray characters, round a decimal, drop a
-comma or take the digits out of `141827abc` and proceed. A silently "corrected" ID is a valid ID for
-*some other* work item, and Step 6 then writes an RCA onto it. Print the malformed-ID stop below,
-quote back exactly what you were given, say why it is not a work item ID, and **wait**.
+comma, evaluate `1e5`, or take the digits out of `141827abc`. A silently "corrected" ID is a valid ID
+for *some other* work item, and Step 6 then writes an RCA onto it. Quote back exactly what you were
+given, say why it is not a work item ID, and **wait**:
 
 > ❄️ **PHX Debugger cannot use that bug ID.**
 >
@@ -573,11 +520,9 @@ quote back exactly what you were given, say why it is not a work item ID, and **
 > Give me the ID or the work item URL and I will carry on. I have not read anything or touched your
 > code.
 
-**Never derive an ID from anything else.** Not from the current git branch name, not from a folder
-name, not from a commit message, and not from "the bug we were discussing" earlier in the
-conversation. If the developer refers back to an earlier bug, ask them to restate the number. The
-reason is Step 6: a misidentified work item gets somebody else's RCA written onto it, which is the
-most expensive mistake this skill can make and the hardest to notice.
+**Never derive an ID from anything else** — not the git branch name, not a folder name, not a commit
+message, not "the bug we were discussing" earlier in the conversation. If the developer refers back to
+an earlier bug, ask them to restate the number.
 
 **If there is no ID, stop and ask:**
 
@@ -591,50 +536,44 @@ most expensive mistake this skill can make and the hardest to notice.
 Then **wait**. When they supply it, carry straight on with Step 0e — do not make them re-invoke the
 skill. Nothing has been read or changed, so resuming is safe.
 
-**If the message contains more than one plausible ID**, do not pick. A number that is part of a path
-or a version string (`HRM-WIDGET45-MVC`, `v4.5.2`) is not a work item ID, so it usually resolves
-itself — but if two genuine candidates remain, name both and ask which.
+**If the message contains more than one plausible ID**, do not pick. A number inside a path or a
+version string (`HRM-WIDGET45-MVC`, `v4.5.2`) is not a work item ID, so it usually resolves itself —
+but if two genuine candidates remain, name both and ask which. Note any extra dependency code paths
+the developer supplied.
 
-Set the **mode** from the message if one of `quick` / `smart` / `balanced` / `advanced` appears **as
-a standalone argument or as a plain instruction about depth** — not merely because the word occurs.
-*"fix 141827 smart"* and *"be quick about it"* set the mode; *"the smart card module"* and *"an
-advanced search screen"* do not. If it is genuinely ambiguous, take the default and say which mode
-you are running in — the banner shows it, so a wrong reading is visible immediately. Otherwise it is
-`balanced`. Note any extra dependency code paths the developer supplied.
+### Step 0e — Validate the ID against Azure DevOps. **Hard gate**
 
-### Step 0e — Validate the ID against Azure DevOps
-
-An ID that parses is not an ID that exists. Fetch it before you commit to it:
-
-`wit_work_item` · `get` with `expand: "All"`. This is the same call Step 1 uses — one fetch serves
-both, so do not call it twice.
+An ID that parses is not an ID that exists. Fetch it with `wit_work_item` · `get`, `expand: "All"`.
+This is the same call Step 1 uses — one fetch serves both, so do not call it twice.
 
 Four things to check on the response, in order:
 
-1. **It resolved.** A 404 or "work item does not exist" means the ID is wrong, or it belongs to an
-   organization your MCP server is not pointed at. **Report the tool's own error verbatim and stop.**
-   Do not search for it by any other means — see *the second law: work item lookup is by ID only*,
-   which spells out exactly what to do here.
-2. **It is a bug.** Read `System.WorkItemType`. If it is a Task, User Story, Feature or anything
-   else, say what it actually is and ask whether to continue — this skill's RCA fields, its
-   classification dropdowns and its state list are all Bug-shaped, and much of Steps 6–7 will not fit
-   another type.
-3. **Read `System.State`, and treat it as information, not a gate.** Show it in Step 0f so the
-   developer can see what they are picking up, and hold it as the `from` value for the transition at
-   Step 0g. It never stops the run. If it is a state that plainly means somebody else is already on
-   this — an active assignee, a fix in review, a resolution signed off — say so in one line at Step
-   0f and let the developer decide; do not decide for them.
-4. **Note `System.TeamProject` and `rev`.** The project is what every later tool call needs (Step 0b),
-   and the rev is your concurrency baseline for Step 6.
+1. **It resolved.** A 404 or "work item does not exist" means the ID is not in the project you
+   fetched from (Step 0b) — the bug may live in another project, the ID may be wrong, or it may
+   belong to an organization your MCP server is not pointed at. **Name the project you tried, report
+   the tool's own error verbatim, and ask for the right project** — see *when the ID does not
+   resolve*, above. Do not go looking for it.
+2. **It is a bug.** Read `System.WorkItemType`. If it is a Task, User Story, Feature or anything else,
+   say what it actually is and ask whether to continue — the RCA fields, the classification dropdowns
+   and the state list are all Bug-shaped, and much of Steps 6–7 will not fit another type.
+3. **Read `System.State`, and treat it as information, not a gate.** Show it at Step 0f so the
+   developer can see what they are picking up, and hold it as the `from` value for Step 2a. It never
+   stops the run. If it plainly means somebody else is already on this — an active assignee, a fix in
+   review, a resolution signed off — say so in one line at Step 0f and let the developer decide.
+4. **Note `System.TeamProject` and `rev`.** The project on the response is what every later tool call
+   uses from here on, in place of the one you fetched with (Step 0b).
+   The `rev` is your concurrency baseline — **and you update it from the response of every write you
+   make yourself** (Step 2a's state change, a Step 2 comment), so that the check at Step 6 only ever
+   fires on somebody else's edit.
 
 ### Step 0f — Confirm this is the right bug. **STOP**
 
-Once the work item has resolved and validated: print the greeting banner, with the real title and
-the working directory in it. Then, before any investigation, show the developer what you actually fetched and get their go-ahead. This
-is cheap insurance: it catches a transposed digit, a bug from the wrong version line, or a URL pasted
-from the wrong browser tab — all while nothing has been read and nothing touched.
+Print the greeting banner, with the real title and working directory in it. Then, before any
+investigation, show what you actually fetched and get the developer's go-ahead. This catches a
+transposed digit, a bug from the wrong version line, or a URL pasted from the wrong browser tab —
+while nothing has been read and nothing touched.
 
-Present a short block, not a data dump:
+A short block, not a data dump:
 
 - **`#<id> — <title>`**
 - **Type · State · Assigned to · Area path · `System.TeamProject`**
@@ -648,62 +587,22 @@ Present a short block, not a data dump:
 
 Then ask one question: **"Is this the bug you want me to fix?"** and **wait**.
 
-- **Yes** → Step 0g, then Step 1 and read it all properly.
+- **Yes** → Step 1.
 - **No / wrong one** → take the corrected ID and go back to Step 0e. A replacement bug is validated
-  from scratch; it inherits nothing from the first one. Do not carry any impression of the discarded
+  from scratch and inherits nothing from the first one. Do not carry any impression of the discarded
   work item forward.
 
 Do not merge this into a longer message that also starts the investigation. It is a stop.
 
-### Step 0g — Move the bug to **`Under Investigation`**
-
-The developer has just said *yes*, so work on this bug starts now — and the board should say so
-before you disappear into the investigation. This is the first write this skill makes to Azure
-DevOps, and it happens **before `EnterPlanMode`** at Step 1, so plan mode is never in the way of it.
-
-1. Call `wit_work_item` · `get_type` and read its `states[]`. **Never type a state name from
-   memory** — this org has 21 for Bug alone. Find the entry whose name is `Under Investigation` and
-   use it verbatim. Hold the response; Steps 6 and 7 reuse it rather than calling again.
-2. If `states[]` has no `Under Investigation`, **do not force the nearest match** — `Active`,
-   `Investigating` and `In Analysis` are not it. Say which states the type does offer, ask the
-   developer which one they want, and wait.
-3. If the bug is already in `Under Investigation`, there is nothing to write. Say so in one line and
-   go on to Step 1.
-4. Otherwise `wit_work_item_write` · `update`:
-
-   ```
-   { "op": "add", "path": "/fields/System.State",   "value": "Under Investigation" }
-   { "op": "add", "path": "/fields/System.History", "value": "<short note: investigation started>" }
-   ```
-
-5. Report the transition, `from → to`, from the response — one line, not a section.
-
-If the transition is rejected, the process template does not allow it from the state the bug is in.
-**Report that plainly and ask the developer how they want to proceed** — whether to move it by hand
-first, or to run the investigation without the status change. Do not try other states at random, and
-do not silently continue as though the write succeeded.
-
 ## Step 1 — Read the bug properly
 
-**Call `EnterPlanMode` first.** Steps 1–4 are investigation and must not be able to touch the
-developer's files.
-
-Two things in this stretch are not file edits and are not blocked by it, so do them without leaving
-plan mode: **reading** through the MCP server, and saving attachments to a scratch directory (below).
-One thing *is* a write and needs care: the insufficient-information **comment** at Step 2 — and it is
-only ever posted after the developer asks for it, never as the first move. If plan mode blocks that
-MCP call, call `ExitPlanMode` first — presenting the verdict and the comment you intend to post *is*
-the plan at that point — then post it and end the run. Putting the questions to the developer is not
-a write and needs none of this; do it inside plan mode.
-
 You already have the work item from Step 0e — reuse that response rather than fetching it again. Now
-read it *fully*, and pull in what the first fetch did not cover. Then
-`wit_work_item` · `list_comments` — comments are a separate call and are frequently where the real
-detail lives.
+read it *fully*, and add `wit_work_item` · `list_comments`: comments are a separate call and are
+frequently where the real detail lives.
 
 Read all of it — title, description, repro steps, expected vs actual, acceptance criteria, severity,
-area/iteration, tags, every `Custom.*` field that has content, **the comments, the parent, and every
-related link**. Note `System.TeamProject` and the `rev`; you need both later.
+area/iteration, tags, every `Custom.*` field with content, **the comments, the parent, and every
+related link**.
 
 These are the fields that carry a PHR bug. Reference names are **exact and case-sensitive**, and
 `get` returns them flat under `fields`:
@@ -718,19 +617,24 @@ These are the fields that carry a PHR bug. Reference names are **exact and case-
 | Parent | `System.Parent` |
 | The RCA narrative and classification fields | `Custom.*` — see Step 6 and `reference\rca-template.md` |
 
-`Custom.*` fields vary by process template, so read whatever the response actually carries rather
-than expecting a fixed set. The MCP server returns the raw work item — no flattening, no HTML
-stripping — so **you** do that sorting now:
+**Keep the reporter as an identity, not just a name.** `System.CreatedBy` comes back as an identity
+object — `displayName`, `uniqueName`, and an `id` GUID. That GUID is what turns an @mention into an
+actual notification, and Step 2 cannot post its comment without it. Note it now, and note
+`System.AssignedTo` the same way.
+
+`Custom.*` fields vary by process template, so read what the response actually carries rather than
+expecting a fixed set. The MCP server returns the raw work item — no flattening, no HTML stripping —
+so **you** do that sorting now:
 
 - `relations[]` entries whose `url` ends `/workItems/<n>` are **linked work items** — follow them.
-- `relations[]` entries with `rel: "AttachedFile"` are **attachments** — `attributes.name` is the
-  file name, and the attachment GUID is the last segment of `url`.
+- `relations[]` entries with `rel: "AttachedFile"` are **attachments** — `attributes.name` is the file
+  name, and the attachment GUID is the last segment of `url`.
 - Large text fields (`System.Description`, `Microsoft.VSTS.TCM.ReproSteps`, the `Custom.*` narrative
   fields) come back as **HTML**. Read through the markup; do not report the tags as content.
 
-**Read the attachments — every one of them.** A log file or screenshot on the ticket routinely names
-the exact failing path: the URL, the message template, the timestamp. Ignoring them and inferring
-from the description instead is how a run ends up asking a question the ticket already answered.
+**Read the attachments — every one of them.** A log file or screenshot routinely names the exact
+failing path: the URL, the message template, the timestamp. Ignoring them and inferring from the
+description instead is how a run ends up asking a question the ticket already answered.
 
 Pull each one with `wit_work_item_attachment`:
 
@@ -743,29 +647,28 @@ project      : System.TeamProject
 
 With `savePath` it writes the file and returns the path — `Read` that path to see a screenshot.
 Without it, the content comes back base64-encoded. **This is not optional and there is no "I cannot
-fetch attachments" exit.** If the bug you are given has no description of its own, follow its links
-and read *their* attachments too.
+fetch attachments" exit.** If the bug has no description of its own, follow its links and read *their*
+attachments too.
 
-`savePath` is relative to the working directory, which is the developer's repository — so it lands
-in their tree. Keep everything under one directory named for this skill, tell them at Step 8 that it
-is there, and **never `git add` it**. If the repo has a `.gitignore` and that directory is not
-already ignored, say so rather than editing their `.gitignore` uninvited. Ticket attachments can
-carry customer data; they do not belong in a commit.
+`savePath` is relative to the working directory, which is the developer's repository — so the files
+land in their tree. Keep everything under one directory named for this skill, tell them at Step 8 that
+it is there, and **never `git add` it**. If the repo has a `.gitignore` and that directory is not
+already ignored, say so rather than editing their `.gitignore` uninvited. Ticket attachments can carry
+customer data; they do not belong in a commit.
 
 Step 0a gates `wit_work_item_attachment`, so a server build without it should never get this far. If
 it somehow does, say plainly that the attachments could not be read and that the investigation is
-proceeding without evidence you know exists — and flag it in the return and at Step 8. Do not
+proceeding without evidence you know exists — and flag it in the context packet and at Step 8. Do not
 download them with `curl` and a PAT.
 
 Then state in one or two sentences what the bug actually is. If you cannot state it, that is your
 first signal for Step 2.
 
-**Before concluding anything is missing, follow the links.** Bugs are routinely copied across
-version lines with an empty description, where every detail lives on the sibling or the parent
-defect. A ticket that looks empty is often complete once you read what it points at. Fetch the
-related items — `wit_work_item` · `get_batch` takes all the IDs at once — and check whether a
-sibling has already been fixed — if so, this is a **port**, not
-an investigation, and the risk profile is entirely different.
+**Before concluding anything is missing, follow the links.** Bugs are routinely copied across version
+lines with an empty description, where every detail lives on the sibling or the parent defect. A
+ticket that looks empty is often complete once you read what it points at. Fetch the related items —
+`wit_work_item` · `get_batch` takes all the IDs at once — and check whether a sibling has already been
+fixed. If so, this is a **port**, not an investigation, and the risk profile is entirely different.
 
 ## Step 2 — Sufficiency assessment
 
@@ -773,8 +676,8 @@ Decide whether there is enough to troubleshoot. Judge by one question:
 
 > **Can I identify a specific code path to investigate?**
 
-Not "is every field filled in" — a terse bug from someone who knows the system is workable; a
-verbose one that never says what went wrong is not.
+Not "is every field filled in" — a terse bug from someone who knows the system is workable; a verbose
+one that never says what went wrong is not.
 
 Work through these, counting the linked items and comments as part of the ticket:
 
@@ -786,27 +689,56 @@ Work through these, counting the linked items and comments as part of the ticket
 | 4 | **Which build / environment** | Version, branch or environment, so you look at the right source |
 | 5 | **How to reach it** | Repro steps, or the data/config that triggers it |
 
-Then give a verdict.
+Then give a verdict. **The work item's state is not touched until this verdict is SUFFICIENT** — a bug
+nobody can investigate yet has not started being investigated, and the board should not say it has.
 
 ### If SUFFICIENT
 
-Say so in one line, note anything thin that you will have to infer, and go to Step 3.
+Say so in one line, note anything thin that you will have to infer, then do Step 2a and go to Step 3.
+
+#### Step 2a — Move the bug to `Under Investigation`, then enter plan mode
+
+Work on this bug starts now, and the board should say so before you disappear into the investigation.
+This is the first write this skill makes to Azure DevOps.
+
+1. Call `wit_work_item` · `get_type` and read its `states[]`. **Never type a state name from memory.**
+   Find the entry named `Under Investigation` and use it verbatim. **Hold the response** — Steps 6 and
+   7 reuse it rather than calling again.
+2. If `states[]` has no `Under Investigation`, **do not force the nearest match** — `Active`,
+   `Investigating` and `In Analysis` are not it. Say which states the type does offer, ask which one
+   they want, and wait.
+3. If the bug is already in `Under Investigation`, there is nothing to write. Say so in one line.
+4. Otherwise `wit_work_item_write` · `update`:
+
+   ```
+   { "op": "add", "path": "/fields/System.State",   "value": "Under Investigation" }
+   { "op": "add", "path": "/fields/System.History", "value": "<short note: investigation started>" }
+   ```
+
+5. Report the transition, `from → to`, from the response — one line, not a section. **Take the new
+   `rev` from that response as your concurrency baseline** for Step 6.
+6. If the transition is rejected, the process template does not allow it from the state the bug is in.
+   **Report that plainly and ask how they want to proceed** — move it by hand first, or run the
+   investigation without the status change. Do not try other states at random, and do not continue as
+   though the write succeeded.
+7. Then call **`EnterPlanMode`**. Steps 3–4 are investigation and must not be able to edit code.
 
 ### If INSUFFICIENT
 
-Do not guess, and do not start reading code hoping something turns up.
+Do not guess, and do not start reading code hoping something turns up. **The state stays exactly as
+you found it** — nothing has been investigated, so nothing has changed on the board.
 
-**Ask the developer before you touch the ticket.** The developer sitting in front of you is very
-often the fastest source of the missing detail — they know the module, they may have seen the
-failure themselves, and waiting on a ticket comment for something they could answer in ten seconds
-wastes a day. A comment on the work item is for when *they* cannot answer either.
+**Ask the developer before you touch the ticket.** The developer in front of you is very often the
+fastest source of the missing detail — they know the module, they may have seen the failure
+themselves, and waiting on a ticket comment for something they could answer in ten seconds wastes a
+day. A comment on the work item is for when *they* cannot answer either.
 
-1. **Put the gaps to the developer as questions, and STOP.** State the verdict in one line, say what
-   you checked (including the linked items, so nobody repeats your work), then list the specific
-   questions — numbered, each one answerable, each one naming why it blocks you. Close by offering
-   the two ways forward explicitly:
+1. **Put the gaps to the developer as questions, and STOP.** State the verdict in one line, say the
+   status is unchanged and why, say what you checked (including the linked items, so nobody repeats
+   your work), then list the specific questions — numbered, each answerable, each naming why it blocks
+   you. Close by offering the two ways forward explicitly:
 
-   > I can't identify a code path to investigate from #140127 yet.
+   > I can't identify a code path to investigate from #140127 yet, so I've left the status alone.
    >
    > **Checked:** description, repro steps, acceptance criteria, 3 comments, parent #119235,
    > related #140306.
@@ -819,25 +751,51 @@ wastes a day. A comment on the work item is for when *they* cannot answer either
    >    request, so something about the existing record matters.
    >
    > **Answer any of these here and I'll carry on**, or tell me to **post them as a comment on the
-   > work item** for the reporter to answer.
+   > work item** — I'll @mention **Nimal Perera**, who reported it, so the questions reach them.
 
-   Then **wait**. Do not post anything, and do not start investigating, until they reply.
+   Name that person in the offer, from `System.CreatedBy` — not "the reporter" in the abstract. The
+   developer is agreeing to notify a named colleague and should see who before they say yes.
 
-2. **If they answer** — fold what they gave you into the picture and re-run the sufficiency test
-   against it. A partial answer can still be enough: the test is unchanged, *can I identify a
-   specific code path to investigate*. If it now passes, say so in one line, note that the detail
-   came from the developer rather than the ticket (it matters later — the RCA and any comment you
-   write must not present it as though it were on the work item), and go to Step 3. If it still
-   fails, go back to the questions with only what is *still* missing, or offer the comment again.
+   Then **wait**. Do not post anything, do not change the state, and do not start investigating, until
+   they reply.
+
+2. **If they answer** — fold what they gave you into the picture and re-run the sufficiency test. A
+   partial answer can still be enough: the test is unchanged, *can I identify a specific code path to
+   investigate*. If it now passes, say so in one line, note that the detail came from the developer
+   rather than the ticket (it matters later — the RCA and any comment must not present it as though it
+   were on the work item), then do **Step 2a** and go to Step 3. If it still fails, go back to the
+   questions with only what is *still* missing, or offer the comment again.
 
 3. **If they ask you to comment** — or if they say they don't know and there is nobody else to ask —
-   post it on the work item with `wit_work_item_comment_write` · `add`. Pass **`format: "Html"`** —
-   the default is Markdown, and the HTML below renders as literal tags without it. It must name
-   exactly what is missing and what would unblock it — a generic "insufficient information" comment
-   is useless to the reporter and will come back unanswered. Carry over anything the developer *did*
-   settle, so the reporter is only asked what is genuinely still open.
+   post it with `wit_work_item_comment_write` · `add`. Pass **`format: "Html"`**; the default is
+   Markdown and the HTML below renders as literal tags without it. Name exactly what is missing and
+   what would unblock it — a generic "insufficient information" comment is useless to the reporter and
+   will come back unanswered. Carry over anything the developer *did* settle, so the reporter is only
+   asked what is genuinely still open.
+
+   **@mentioning the person who reported the bug is mandatory.** A comment with nobody mentioned
+   notifies nobody — it sits on the work item until someone happens to open it, which is the exact
+   delay this step exists to avoid. The person to mention is the identity in **`System.CreatedBy`**,
+   and the mention goes on the **first line**. If the questions are really for someone else — a person
+   named in the discussion, or `System.AssignedTo` — mention them **as well as** the reporter, never
+   instead of.
+
+   A mention is an anchor carrying that identity's GUID. Plain `@Name` text notifies no one:
 
    ```html
+   <a href="#" data-vss-mention="version:2.0,IDENTITY-GUID">@Display Name</a>
+   ```
+
+   Substitute the real `id` and `displayName` from `System.CreatedBy`. If you do not have the GUID,
+   re-fetch with `wit_work_item` · `get`, `expand: "All"`. **If it still will not resolve, do not post
+   the comment.** Tell the developer, show them the text you were going to post, and let them decide
+   whether to post it themselves or give you the right person. Posting an unmentioned comment — or a
+   literal `@Nimal Perera` that notifies nothing — is worse than not posting: the ticket looks answered
+   and nobody has been asked.
+
+   ```html
+   <a href="#" data-vss-mention="version:2.0,3f2b0c1e-8f4a-4d2c-9a71-6b0e5d9c4a10">@Nimal Perera</a>
+   — you raised this one; I need a little more before I can investigate it.<br><br>
    <b>Insufficient information to debug</b><br><br>
    I could not identify a code path to investigate from this work item.<br><br>
    <b>Checked:</b> description, repro steps, acceptance criteria, 3 comments,
@@ -851,10 +809,13 @@ wastes a day. A comment on the work item is for when *they* cannot answer either
    </ol>
    ```
 
-   The bug is in `Under Investigation` from Step 0g and stays there — no fix was written, so nothing
-   earns `Dev In Progress`. Do not move it anywhere else unless the developer asks; if they want it
-   put back where it was, read the states from `wit_work_item` · `get_type` first and take the target
-   from that list.
+   When the call returns, report it in one line — the comment ID and **who was mentioned**, by name —
+   so the developer knows the notification went out and to whom. Update your held `rev` from that
+   response.
+
+   **The state is still untouched**, and it stays that way: no investigation happened, so nothing earns
+   `Under Investigation`. Do not move it anywhere unless the developer asks; if they do, take the
+   target from `get_type`'s `states[]`.
 
 4. **Stop.** The run ends here — whether they had you comment or told you to leave the ticket alone.
 
@@ -863,10 +824,9 @@ If the ticket is workable but one specific detail is missing, that is a question
 
 ## ❄️ Step 3 — Hand the bug to `systematic-debugging`
 
-**You do not debug.** Not here, not anywhere in this skill. Finding the root cause is
-`superpowers:systematic-debugging`'s job, and it runs in a **subagent** you spawn with the bug's
-context. Your job in this step is to assemble that context, delegate, and check what comes back is
-complete.
+**You do not debug.** Finding the root cause is `superpowers:systematic-debugging`'s job, and it runs
+in a **subagent** you spawn with the bug's context. Your job here is to assemble that context,
+delegate, and check what comes back is complete.
 
 This is the division the whole skill rests on:
 
@@ -878,13 +838,12 @@ This is the division the whole skill rests on:
 | Local `git` branch, commit, PR — each on approval | Neither. It leaves changes in the working tree |
 
 **Do not read source files yourself to "get oriented" first.** That is the overlap this structure
-exists to remove: two half-investigations, one of them uninformed by the superpower's method. Your
-evidence about the code is what the subagent returns.
+exists to remove. Your evidence about the code is what the subagent returns.
 
 ### 3a — Assemble the context packet
 
-Everything the subagent needs, from what you read in Steps 0e–2. It cannot see your conversation,
-and it must not have to re-fetch the ticket to find out what it is working on.
+Everything the subagent needs, from what you read in Steps 0e–2. It cannot see your conversation, and
+it must not have to re-fetch the ticket to find out what it is working on.
 
 | | |
 |---|---|
@@ -892,13 +851,12 @@ and it must not have to re-fetch the ticket to find out what it is working on.
 | **Symptom** | What goes wrong, in one line, in your words |
 | **Expected vs actual** | As the ticket states it, or as the feature plainly implies |
 | **Error text, verbatim** | Every message, exception, stack frame and message template you found — in the description, the comments, or an attachment. Quote exactly; a paraphrased error is unsearchable |
-| **Attachment findings** | What each attachment actually showed. You read them in Step 1; the subagent cannot re-read a screenshot you have already interpreted, so pass the finding, and the saved path if you have one |
+| **Attachment findings** | What each attachment actually showed, **plus the saved path**. The finding saves the subagent re-downloading and re-interpreting evidence you have already read; the path is there so it can look again if your reading is in doubt |
 | **Repro steps** | From the ticket, plus the data or config that triggers it |
 | **Environment** | Build, version, branch, client environment — whatever the ticket names |
 | **Linked items** | Parent, siblings and related IDs, with one line each on what they add. **Say plainly if a sibling is already fixed** — that makes this a port, not an investigation, and changes everything about how it should be approached |
 | **Prior RCA on the ticket** | If there is one, pass it **flagged as an unverified claim** to be checked against source, not as a finding |
 | **Code location** | The working directory, its `git rev-parse --show-toplevel`, current branch and `git log -1`; plus any extra dependency paths the developer supplied at invocation |
-| **Mode** | `quick` / `smart` / `balanced` / `advanced`, and what it means for the branch sweep |
 | **Comments** | Anything in the discussion that bears on the defect — often where the real detail is |
 
 ### 3b — Spawn the investigator
@@ -910,16 +868,17 @@ Spawn **one** subagent, and tell it in its prompt to:
    contract. Do not restate the brief in the prompt; point at it.
 2. **Invoke `superpowers:systematic-debugging`** and work Phases **1 to 3**.
 3. **Stop at the end of Phase 3.** Implementation is Phase 4 and belongs to Step 5, after the
-   developer has approved. An investigator that comes back having already edited files has broken
-   the developer's gate.
+   developer has approved. An investigator that comes back having already edited files has broken the
+   developer's gate.
 4. **Read only.** It may read files, run `git`, `grep` and a disassembler, and read Azure DevOps
    through MCP. It may **not** edit files, and it may **not** write anything to Azure DevOps — no
    comments, no fields, no state, no branches, no PRs. Every ADO write in this procedure is yours.
-5. **Return the twelve-section investigator return** defined in the brief.
+5. **Return the twelve-section investigator return** defined in the brief, including what it chose not
+   to check and why.
 
 Then pass the context packet.
 
-❄️ Say that you are delegating, and to what — the developer should see the superpower being used:
+❄️ Say that you are delegating, and to what:
 
 > ❄️ **SUPERPOWERS · systematic-debugging** — *investigator subagent, Phases 1–3*
 >
@@ -927,19 +886,20 @@ Then pass the context packet.
 
 ### 3c — Check what comes back
 
-You are not re-running the investigation, and you must not go and read the code to "confirm" it —
-that is the overlap again. You are checking the return is **usable**:
+You are not re-running the investigation, and you must not read the code to "confirm" it. You are
+checking the return is **usable**:
 
 - **Is `rootCauseEstablished` true?** If not, go to *If the cause could not be established* below.
-- **Is the root cause stated as a fact, with `file:line`?** A return that says *"probably"*,
+- **Is the root cause stated as a fact, with `file:line`?** A return saying *"probably"*,
   *"presumably"* or *"it may be a configuration issue"* has not finished Phase 3.
-- **Are sections 2–11 filled?** Every one of them feeds an RCA field — `reference\rca-template.md`
-  maps which goes where, and §2 and §3 are what `Custom.Evidence` is built from. A blank
-  *Hypotheses* or *Analysis method* becomes a blank RCA field when you assemble at Step 5d, which is
+- **Are sections 2–11 filled?** Every one feeds an RCA field — `reference\rca-template.md` maps which
+  goes where. A blank *Hypotheses* or *Analysis method* becomes a blank RCA field at Step 5d, which is
   the half-done RCA reviewers complain about. `NOT ESTABLISHED` with a reason is acceptable; silence
   is not.
-- **Is the proposed fix one change addressing that cause**, rather than a guard over the symptom or
-  a bundle of improvements?
+- **Does it say what it did not check** — the branches it skipped, the repository hunt it judged
+  unnecessary — rather than leaving coverage implied?
+- **Is the proposed fix one change addressing that cause**, rather than a guard over the symptom or a
+  bundle of improvements?
 
 If any of these fail, **send it back** — continue the same subagent with what is missing rather than
 spawning a fresh one, which would throw away everything it learned. If it fails twice, stop and put
@@ -954,21 +914,21 @@ the position to the developer honestly rather than presenting a plan you do not 
 `rootCauseEstablished: false` is a legitimate outcome, not a failure to hide. The subagent will have
 returned what it investigated and what would settle it.
 
-Take that back to **Step 2's insufficient path**, in the same order: put the specific thing that
-would settle it to the developer first, built around what was actually investigated, and let them
-either answer it or have you post it as a comment. If they answer, resume — continue the same
-subagent with what they gave you rather than spawning a fresh one. If they ask for the comment, it
-is far more valuable to the reporter than the original verdict would have been, because it names the
-code that *was* read. Then stop.
+Take that back to **Step 2's insufficient path**, in the same order: put the specific thing that would
+settle it to the developer first, built around what was actually investigated, and let them either
+answer it or have you post it as a comment. If they answer, resume — continue the same subagent rather
+than spawning a fresh one. If they ask for the comment, it is far more valuable to the reporter than
+the original verdict would have been, because it names the code that *was* read. The bug stays in
+`Under Investigation`; it has genuinely been investigated. Then stop.
 
 ## Step 4 — Fix plan · **STOP**
 
-The plan is the subagent's findings, presented by you. You are the developer's interface, not a
-second opinion — do not soften a definitive root cause into a maybe, and do not add a cause of your
-own that the investigation did not produce.
+The plan is the subagent's findings, presented by you. You are the developer's interface, not a second
+opinion — do not soften a definitive root cause into a maybe, and do not add a cause of your own that
+the investigation did not produce.
 
 Lead with the **root cause as a settled fact**. If the return left it as a candidate, you should have
-sent it back in Step 3c; do not present two causes and let the developer choose between them.
+sent it back at Step 3c; do not present two causes and let the developer choose.
 
 Present, from the investigator return:
 
@@ -977,17 +937,16 @@ Present, from the investigator return:
 - **The exact change**, per file
 - **Why this shape** and what else the investigation considered
 - **Risk** — what could regress, what is newly reachable, what stays untouched
-- **Blast radius outside this ticket.** If the same misread, missing branch or bad assumption is
-  live at other call sites, list them with `file:line`, say plainly they are **not** in this change,
-  and recommend whether to ship the one fix or all of them. This is often the most valuable thing in
-  the plan, and nobody will find it later.
-- **Branch impact**, if it swept — and if it did not, say which mode skipped it
+- **Blast radius outside this ticket.** If the same misread, missing branch or bad assumption is live
+  at other call sites, list them with `file:line`, say plainly they are **not** in this change, and
+  recommend whether to ship the one fix or all of them. This is often the most valuable thing in the
+  plan, and nobody will find it later.
+- **Coverage** — which branches were swept, and which were not and why
 - **How it should be tested** — numbered, including the regression cases that must still behave
 - **Any decision that is genuinely theirs**, with your recommendation attached. These come from the
   return's *open questions*; put them as they are rather than answering them yourself.
 
-Keep the ❄️ marker on the parts that are the superpower's findings, so it stays clear which of this
-is investigation and which is you.
+Keep the ❄️ marker on the parts that are the superpower's findings.
 
 Then call **`ExitPlanMode`** and wait.
 
@@ -1023,8 +982,8 @@ Spawn a subagent and tell it to:
 1. **Read `reference\debugging-brief.md`** — the same brief, whose *Implementer* section is written
    for it.
 2. **Invoke `superpowers:systematic-debugging`** and carry out **Phase 4** against the approved plan.
-3. **Make the one fix**, edit byte-precisely, build the affected project, and leave the changes in
-   the working tree.
+3. **Make the one fix**, edit byte-precisely, build the affected project, and leave the changes in the
+   working tree. If it cannot build, it says so explicitly rather than implying verification happened.
 4. **Not branch, commit, push or open a PR** — those are yours, above.
 5. **Return the six-section implementer return** from the brief.
 
@@ -1041,24 +1000,23 @@ Give the developer the diff, the build result, and how to verify it. Then stop a
 
 **If they report a problem, it goes back to the subagent, never to you.** Continue the implementer
 with what they observed — or, if the fix was addressing the wrong cause, go back to the investigator
-with the new information. Do not "just adjust" the code yourself; a fix half-owned by the parent is
-a fix nobody investigated.
+with the new information. Do not "just adjust" the code yourself; a fix half-owned by the parent is a
+fix nobody investigated.
 
 The superpower's rule carries: after three failed attempts, stop and question the design with the
 developer rather than trying a fourth.
 
-Loop until they confirm it works. **Do not write the RCA before they confirm** — an RCA for a fix
-that turned out not to work is worse than no RCA.
+Loop until they confirm it works. **Do not write the RCA before they confirm** — an RCA for a fix that
+turned out not to work is worse than no RCA.
 
 ### 5d — Assemble the RCA payload, while the returns are in front of you
 
 The moment they confirm, compose the eleven fields **from the two subagent returns**, following
 `reference\rca-template.md`, which maps each field to the return sections it comes from.
 
-Do this now, as one deliberate step, and not as an afterthought inside Step 6. The reason is
-concrete: the returns are structured evidence you were handed, and by the time you are mid-patch you
-will be tempted to write the RCA from your impression of the run instead. An RCA reconstructed from
-memory is how *Hypotheses* ends up as one line and *Analysis method* ends up as "traced the code".
+Do this now, as one deliberate step, not as an afterthought inside Step 6. The returns are structured
+evidence you were handed; by the time you are mid-patch you will be tempted to write the RCA from your
+impression of the run instead, and that is how *Hypotheses* ends up as one line.
 
 While assembling:
 
@@ -1075,13 +1033,13 @@ Hold the assembled payload. Step 6 patches it.
 
 ## Step 6 — RCA onto the work item
 
-You assembled the payload in Step 5d from the subagent returns, following
-`reference\rca-template.md` — which says, per field, exactly which return sections feed it. This step
-writes it.
+You assembled the payload at Step 5d, following `reference\rca-template.md` — which says, per field,
+exactly which return sections feed it. This step writes it.
 
-Fill **every** field. A half-filled RCA is a recurring complaint from reviewers, and with the returns
-in hand there is no excuse for one: if a field is thin, the fix is to go back to the subagent, not to
-pad it.
+**Every field gets content.** A field with no source in either return is a gap in the investigation,
+not something to fill with plausible prose — send it back to the subagent. Only where the answer
+genuinely was not established do you write what *was* investigated and what would settle it. Never
+pad, and never guess a picklist value.
 
 **Eleven narrative fields**, all HTML-typed: `Custom.InitialFindings`, `Custom.ToolsandTechniques`,
 `Custom.Hypotheses`, `Custom.AnalysisMethod`, `Custom.FixDescription`, `Custom.Evidence`,
@@ -1099,17 +1057,18 @@ Three things that will bite you on the narrative fields:
 - **Append, never overwrite.** If a field already has content, splice yours in and keep theirs. Guard
   for idempotence so a re-run cannot duplicate a section.
 - **There is no `/rev` concurrency test through MCP.** The `updates` op set is `add`/`replace`/
-  `remove` only — the guard the old script used cannot be expressed. Do not go around the server to
-  get it back. Instead:
+  `remove` only. Do not go around the server to get the guard back. Instead:
 
   1. **Re-read immediately before you patch** — `wit_work_item` · `get` — and compare `rev` with the
-     one you noted in Step 0e. Changed? Someone edited the item while you worked: re-read the field
-     contents, re-splice your additions onto the *current* text, and tell the developer.
+     one you are holding. That baseline is the `rev` returned by the **last write you made yourself**
+     (Step 2a's state change, or the Step 2 comment), not the one from Step 0e — so a change here
+     means somebody *else* edited the item while you worked. Re-read the field contents, re-splice
+     your additions onto the *current* text, and tell the developer.
   2. **Keep the gap small.** Compose the whole patch first, then re-read, then patch. Do not re-read
      at the start of Step 6 and patch ten minutes later.
   3. **Verify after.** The read-back below is not a formality — with no test op it is the only thing
-     standing between you and a silent clobber. If a field you did not touch changed between your
-     two reads, say so explicitly.
+     standing between you and a silent clobber. If a field you did not touch changed between your two
+     reads, say so explicitly.
 
 ### The three classification dropdowns
 
@@ -1122,49 +1081,43 @@ and leaving these blank is the half-done RCA reviewers complain about.
 | Root Cause | `Microsoft.VSTS.CMMI.RootCause` |
 | Bug Type Classification | `Custom.BugTypeClassification` |
 
-- **Never type a value from memory** — the same rule as state names. Call `wit_work_item` ·
-  `get_type` with `workItemType: "Bug"` (or whatever `System.WorkItemType` says) and the item's
-  project. The response carries the type's `fields[]`; find each dropdown by `referenceName` and
-  choose only from its `allowedValues`. Nothing else is legal; prose in one of these fails with a
-  400 that reads like an invalid field reference.
-- **If `get_type` does not return `allowedValues` for a picklist, stop and ask the developer** for
-  the permitted values. Do not fetch them from the REST fields endpoint, and do not guess from the
-  values you have seen on other tickets. A wrong classification is worse than a blank one — see
-  below.
+- **Take the allowed values from the `get_type` response you held at Step 2a** — find each dropdown by
+  `referenceName` in the type's `fields[]` and choose only from its `allowedValues`. Nothing else is
+  legal; prose in one of these fails with a 400 that reads like an invalid field reference.
+- **If `get_type` does not return `allowedValues` for a picklist, stop and ask the developer** for the
+  permitted values. Do not fetch them from the REST fields endpoint, and do not guess from values you
+  have seen on other tickets.
 - **Classify the cause the investigation established, not the symptom that was reported.** The
   investigator return's root cause (§2) is what you are classifying — a null-reference crash whose
-  cause was an unhandled sentinel value is a missed edge case, not a code-quality defect. If you
-  cannot map the established cause onto any allowed value, say so rather than reaching for the value
-  that matches the symptom.
+  cause was an unhandled sentinel value is a missed edge case, not a code-quality defect.
 - **Root Cause carries its category in its own name.** Every value is `<cause> - <Category>` —
-  `Missed Edge Cases - People`, `Wrong data mapping - Data`, `Deployment Errors - Environment`.
-  So decide `Custom.RootCauseCategory` first, then pick a Root Cause whose suffix **matches it**.
-  A mismatched pair is the single most common way this gets filled in wrong.
+  `Missed Edge Cases - People`, `Wrong data mapping - Data`, `Deployment Errors - Environment`. So
+  decide `Custom.RootCauseCategory` first, then pick a Root Cause whose suffix **matches it**. A
+  mismatched pair is the single most common way this gets filled in wrong.
 - **A value already on the item is authoritative context, not an empty slot.** If the ticket already
   says `Custom.RootCauseCategory = People`, treat that as given and pick a Root Cause ending in
   `- People`. Only change an existing value with the developer's explicit agreement, and say what it
   was before.
 - **Propose, then confirm, then write.** Give all three as one short block — the value, and one line
-  on why it fits what the investigation actually established. Wait for the developer. Only then
-  patch. These get counted in reports, so a wrong one is worse than a blank one.
+  on why it fits what the investigation established. Wait for the developer. Only then patch. These
+  get counted in reports, so a wrong one is worse than a blank one.
 - **If nothing in `allowedValues` genuinely fits, leave that field unset and say so** rather than
   forcing the nearest match.
-- `Microsoft.VSTS.CMMI.RootCause` is a 255-char string and cannot hold prose. The narrative root
-  cause still heads `Custom.Evidence`.
+- `Microsoft.VSTS.CMMI.RootCause` is a 255-char string and cannot hold prose. The narrative root cause
+  still heads `Custom.Evidence`.
 
 Then **re-read the item** — `wit_work_item` · `get` — and confirm every field landed and nothing else
 moved. Report the rev change, the per-field character counts for the eleven, and the three dropdowns
-as `before → after`.
+as `before → after`. Update your held `rev` from the response.
 
 ## Step 7 — Status → **`Dev In Progress`**
 
 The fix is written and the developer has confirmed it works (Step 5c), so the bug moves out of
-`Under Investigation` and on to the next hand — `Dev In Progress`.
+`Under Investigation` and on to the next hand.
 
-1. Reuse the `wit_work_item` · `get_type` response from Step 0g (or Step 6) and read its `states[]`.
-   Never type a state name from memory — this org has 21 for Bug alone. Find `Dev In Progress` and
-   use it verbatim. If the type does not offer it, **do not force the nearest match**: say which
-   states it does offer and ask which one they want.
+1. Reuse the `wit_work_item` · `get_type` response from Step 2a and read its `states[]`. Find
+   `Dev In Progress` and use it verbatim. If the type does not offer it, **do not force the nearest
+   match**: say which states it does offer and ask which one they want.
 2. Say what you are about to do — *"the fix is confirmed, so I'll move #\<id\> from `Under
    Investigation` to `Dev In Progress`"* — and **confirm with the developer**.
 3. Then `wit_work_item_write` · `update` with two operations in one call:
@@ -1190,14 +1143,15 @@ Summarise in the chat:
 
 - What was wrong, and the fix, in two lines
 - Files changed, and whether they are committed (by default they are **not**)
+- Where saved attachments landed, if any
 - The RCA rev change
 - The status transition
 - **Anything still open** — an unproven version range, a defect found on other branches, a PR not
   raised, a question the developer still owes an answer to
-- **Anything the investigation itself flagged as unresolved** — a `NOT ESTABLISHED` section, a branch
-  sweep it skipped for the mode, a rejected hypothesis worth revisiting. Do not quietly drop these
-  because the fix worked
+- **Anything the investigation itself flagged as unresolved** — a `NOT ESTABLISHED` section, branches
+  it did not sweep, a rejected hypothesis worth revisiting. Do not quietly drop these because the fix
+  worked.
 
-If something the developer did not ask about matters — the defect is live on eight other branches,
-the RCA on the ticket is wrong, the checkout they are working in is stale — say it here plainly. That is
+If something the developer did not ask about matters — the defect is live on eight other branches, the
+RCA on the ticket is wrong, the checkout they are working in is stale — say it here plainly. That is
 often the most valuable thing this run produces.

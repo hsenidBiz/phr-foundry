@@ -21,7 +21,7 @@ Takes about five minutes, once.
 | | | |
 |---|---|---|
 | **Claude Code** | `npm install -g @anthropic-ai/claude-code` | needs Node.js |
-| **Signed in** | `claude auth login` | opens a browser |
+| **Signed in** | `claude login` (or `/login` in a session) | opens a browser |
 | **`org-standards` plugin** | `claude plugin install org-standards@phr-foundry` | ships this skill |
 | **Superpowers plugin** | `/plugin install superpowers@claude-plugins-official` | **required** — see step 1 |
 | **Azure DevOps MCP server** | `@azure-devops/mcp` | **required** — see step 2. The *only* way this skill talks to ADO |
@@ -97,7 +97,6 @@ there is no code path to pass:
 
 ```
 /org-standards:phx_debugger 141827
-/org-standards:phx_debugger 141827 smart
 ```
 
 Or just describe it — *"fix ADO bug 141827"*. Either way the message must carry the **bug ID**; that
@@ -109,27 +108,27 @@ you invoke — *"…the approval engine is in `D:\Code\ApprovalEngine`"*.
 Before it investigates anything it shows you the work item it fetched — title, state, a short summary
 and what is attached — and waits for you to confirm it is the right bug.
 
-**It moves the status twice.** Once you confirm the bug, it sets the work item to **`Under
-Investigation`** before it starts reading — so the board shows the bug is being worked. After the fix
-is written and *you* confirm it works, it asks and then moves it to **`Dev In Progress`**. It does
-not gate on the state it found; if the bug looks like somebody else is already on it, it says so and
-leaves the call to you.
+**It moves the status twice.** Once it has read the bug and confirmed there is enough to
+troubleshoot, it sets the work item to **`Under Investigation`** — so the board shows the bug is
+being worked. A bug it *cannot* investigate is left exactly as it found it. After the fix is written
+and *you* confirm it works, it asks and then moves it to **`Dev In Progress`**. It does not gate on
+the state it found; if the bug looks like somebody else is already on it, it says so and leaves the
+call to you.
 
-**Modes** — `quick` (essentials only), `smart` (work only in the branch you have checked out; no
-repo hunting, no build, no push), `balanced` (default, full procedure), `advanced` (proves the
-version range, sweeps every branch, traces the introducing commit).
-
-Mode sets how deep the *procedure* goes. How hard it *thinks* is the session's model and effort —
-for a difficult bug run `/model opus` first. A narrow scope at high reasoning beats a wide scope at
-low, which is why `smart` on Opus is often the strongest combination.
+**There are no modes.** How wide to search, whether to hunt for the true repository, whether to sweep
+the branches — the investigation decides from the evidence and tells you what it checked and what it
+skipped. How hard it *thinks* is the session's model and effort, so for a difficult bug run
+`/model opus` first. A narrow scope at high reasoning beats a wide scope at low.
 
 ---
 
 ## What it does, in order
 
 0. **Checks its four gates** — the Azure DevOps MCP server is connected, the Superpowers plugin is
-   available, the bug ID you gave is a valid work item ID, and the work item is in state `New`. Any
-   one of them missing ends the run right there, having read nothing and touched nothing.
+   available, the bug ID you gave is a valid work item ID, and that ID resolves to a real work item.
+   Any one of them failing ends the run right there, having read nothing and touched nothing. The
+   state the bug is in is not a gate: it is reported to you at the confirmation step and the call is
+   yours.
 1. **Reads the bug** — description, repro steps, acceptance criteria, comments, parent and every
    related link. A bug copied across version lines often has an empty description and all its
    detail on the sibling, so the links get read before anything is called missing.
@@ -139,19 +138,25 @@ low, which is why `smart` on Opus is often the strongest combination.
      blocking it, and stops. Answer any of them and it re-assesses and carries on; you never wait on
      a ticket comment for something you already know. If you can't answer either, tell it to post
      the questions as a comment on the work item — **insufficient information to debug** — and it
-     stops there. It will not comment unless you ask it to, and will not change the state without
-     being asked.
+     stops there. **The status is not touched on this path** — a bug nobody can investigate yet has
+     not started being investigated. That comment always **@mentions the person who reported the
+     bug**, so it lands in their notifications rather than sitting unread on the ticket; it tells you
+     who that is before you agree, and reports the mention after posting. If the mention can't be resolved it shows you
+     the text and posts nothing. It will not comment unless you ask it to, and will not change the
+     state without being asked.
 3. ❄️ **Hands the bug to `systematic-debugging`** — the superpowered step, and the one that does the
    actual debugging. `phx_debugger` packages up everything it learned about the bug and spawns a
    **subagent** that runs the superpower's four phases under one Iron Law: *no fixes without root
    cause investigation first*. That subagent reads the error exactly, traces the bad value back to
    where it originates, compares against a module that handles the same case correctly, then states
    one hypothesis and tests it. It also finds the real repository rather than trusting the one you
-   happen to be standing in, because local clones go stale. Everything done under the superpower is
-   marked with ❄️ so you can see exactly where it applied.
+   happen to be standing in, because local clones go stale, and it reports which branches it swept
+   and which it skipped. Everything done under the superpower is marked with ❄️ so you can see
+   exactly where it applied.
 4. **Presents a fix plan and stops** for your approval.
 5. **Hands the approved plan to a second subagent**, which makes the one fix, edits byte-precisely so
-   the diff contains only the intended change, and builds. `phx_debugger` handles the branch itself,
+   the diff contains only the intended change, and builds — saying so plainly if it could not.
+   `phx_debugger` handles the branch itself,
    then gives you the diff to test. It loops until you confirm it works — and problems go back to the
    subagent, never to a side-fix by the outer skill.
 6. **Writes the full RCA** into the work item's `Custom.*` fields, following the RCA template, as a
@@ -207,7 +212,7 @@ changes sit in your working tree for you to review.
 | ADO calls fail with an auth error | Run `az login` again; the token has expired. Restart Claude Code afterwards |
 | ADO calls fail with "not found" on a repo you can see | The MCP server uses *your* identity — check you are signed in as the right account and to the right tenant |
 | It refuses to use `az devops` even when asked | Working as designed. See *Three things it will not do* |
-| `Insufficient information` on a bug you think is fine | It asks you before it comments — read the questions, and if you know the answers just reply and it carries on. Only say "comment on the ticket" when the reporter is the one who has to answer |
+| `Insufficient information` on a bug you think is fine | It asks you before it comments — read the questions, and if you know the answers just reply and it carries on. Only say "comment on the ticket" when the reporter is the one who has to answer — the comment @mentions them, so they get notified |
 | A state change is rejected | Your process template does not allow that transition from the current state. It will say so and ask |
 | Skill not found | The `org-standards` plugin is not installed, or Claude Code has not been restarted since it was. `claude plugin list` should show it |
 | "Needs the Superpowers plugin" | Step 1 not done — run `/plugin install superpowers@claude-plugins-official` and **restart** |

@@ -126,10 +126,11 @@ The MCP server has no bulk sweep, so it is N calls:
    **N/A** (usually the branch predates the code, not a failure).
 4. Return the counts and the per-branch table.
 
-On a 20-branch repo that is 21 calls, so mode governs it: **quick** — do not sweep, say you skipped
-it. **smart** — nothing to sweep, you are on one checked-out branch. **balanced** — sweep the
-branches that plausibly ship the code and say which you skipped. **advanced** — every branch,
-unconditionally. **Never silently sweep a subset and present it as complete.**
+On a 20-branch repo that is 21 calls, so **the depth is your call**: sweep the branches that
+plausibly ship the code, and skip the ones that plainly cannot. What is not negotiable is saying so
+— name the branches you checked and the ones you did not, with the reason, in §9 of your return.
+**Never silently sweep a subset and present it as complete.** The same judgement applies to the
+repository hunt above and to how wide you search: decide from the evidence, then report the decision.
 
 ### When the logic is not in this repository
 
@@ -186,10 +187,9 @@ You are spawned only after the developer approved the plan, and you carry that a
 4. Re-check `git diff`.
 
 **Build** the affected project and report the result, distinguishing new warnings from pre-existing
-ones. If you cannot build, say so explicitly rather than implying verification happened.
-
-**Except in `smart` mode**, where the developer runs the build and the tests themselves. If your
-context packet says `smart`, do not build — return the diff with the build reported as *not run*.
+ones. If you cannot build — no toolchain, a project that does not build standalone, a solution that
+needs credentials you do not have — say so explicitly and return the build as *not run*. Never let a
+build that did not happen read as verification that did.
 
 **Do not branch, commit, push or open a pull request.** Those are the parent's, each behind the
 developer's explicit approval. Leave your changes in the working tree.
@@ -223,8 +223,8 @@ becomes a thin RCA.
 8. **Working-example comparison** (Phase 2) — the module that handles the same signal correctly,
    with `file:line`, and every difference from the broken path.
 9. **Impacted area** — modules, screens, APIs, reports affected; data-integrity risk; which client
-   environments or versions. Plus the branch sweep table if you swept, or a note that you did not
-   and why.
+   environments or versions. Plus the branch sweep table — and, whether you swept or not, exactly
+   which branches you checked, which you did not, and why.
 10. **Historical context** — earliest version the defect exists in (proved, or stated as unverified),
     the commit that introduced it if you found it, and related bug/PR/task IDs you encountered.
 11. **Proposed fix** — the exact change per file; why this shape and what else you considered; the
