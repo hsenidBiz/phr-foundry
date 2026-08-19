@@ -90,8 +90,8 @@ was never run or a case the developer did not confirm.
 
 The scope, in more detail than the Initial Findings summary: modules, screens, APIs and reports;
 other call sites carrying the same defect (with `file:line`), stated explicitly as **not** fixed by
-this change; and the branch sweep table if one was run — FIXED / AFFECTED / N/A per branch. If the
-mode skipped the sweep, say which branches were not checked rather than implying coverage.
+this change; and the branch sweep table if one was run — FIXED / AFFECTED / N/A per branch. Name
+the branches that were not checked, and why, rather than implying coverage.
 
 ## 🚀 `Custom.DeploymentPlan`
 
