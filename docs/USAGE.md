@@ -221,7 +221,12 @@ the Superpowers `systematic-debugging` skill**, running in a subagent, which fin
 the root cause and later writes the fix. `phx_debugger` itself never debugs and
 never edits code: it owns Azure DevOps, your approval gates and the RCA. It
 **stops** for you to approve the fix plan, and stops again for you to test the
-diff. After you confirm the fix works it writes the full RCA into the work item's
+diff. When it asks about the branch it also asks **where you will test the fix**
+— the URL or site — so it can build the project that actually deploys the change
+rather than only the project that contains it, and before handing the diff back
+it checks by content hash that the binary the running app loads is the one it
+just built. If it cannot confirm that, it tells you plainly that you may be
+testing a stale binary. After you confirm the fix works it writes the full RCA into the work item's
 `Custom.*` fields and moves the status to `Dev In Progress`, asking before each. It never commits,
 pushes or opens a PR unless you say so.
 
