@@ -17,7 +17,7 @@ and the plugins it distributes (`plugins/`).
 ├── plugins/
 │   └── org-standards/            # One plugin
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 2.6.0 — see Versioning);
+│       │   └── plugin.json       # Manifest (version: 2.7.0 — see Versioning);
 │       │                         # also declares the phx-dbexplorer MCP server
 │       ├── skills/
 │       │   ├── hrm_sql_standards/
@@ -103,7 +103,7 @@ add it to that project's `.claude/settings.json`:
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (currently
-`2.6.0`). Claude Code resolves a plugin's version from the first of these that
+`2.7.0`). Claude Code resolves a plugin's version from the first of these that
 is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**

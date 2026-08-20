@@ -857,6 +857,7 @@ it must not have to re-fetch the ticket to find out what it is working on.
 | **Linked items** | Parent, siblings and related IDs, with one line each on what they add. **Say plainly if a sibling is already fixed** — that makes this a port, not an investigation, and changes everything about how it should be approached |
 | **Prior RCA on the ticket** | If there is one, pass it **flagged as an unverified claim** to be checked against source, not as a finding |
 | **Code location** | The working directory, its `git rev-parse --show-toplevel`, current branch and `git log -1`; plus any extra dependency paths the developer supplied at invocation |
+| **Run target** | Where the developer will actually exercise the fix — URL, IIS site / app pool, dev server, container, or "tests only, not run". And the directory the running app loads its binaries from, when that differs from the project being changed. Say `UNKNOWN` if it has not been established; never leave the row out. At Step 3a it is usually `UNKNOWN` — Step 5a·2 is where it gets settled, before the implementer is spawned |
 | **Comments** | Anything in the discussion that bears on the defect — often where the real detail is |
 
 ### 3b — Spawn the investigator
@@ -975,6 +976,28 @@ pull request is `repo_pull_request_write` · `create`, likewise only on explicit
 
 Do all of this **before** you spawn the implementer, so it edits on the right branch.
 
+### 5a·2 — Establish the run target, before the implementer is spawned
+
+**A build is not a deployment.** In a multi-project solution the project that *contains* the change
+and the project that *deploys* it are routinely different, and only the second one updates what the
+developer sees. Settle it before any code is written, so the implementer can be told what to build:
+
+1. **Ask the developer where they will test it** — the URL or the site. One line, in the **same
+   message as the branch question at 5a**, so it costs no extra stop.
+2. **Resolve it yourself rather than assuming.** A hostname that looks remote may be local: check the
+   hosts file before trusting DNS. For a hosted app, find the physical path the site serves from, and
+   the directory it loads its assemblies from. This is deployment topology, not the investigation —
+   *"do not read source files to get oriented"* (Step 3) still stands, and this is not that.
+3. **Identify the host project.** If the change lands in a library that a host project references,
+   **the host project is what must be built**.
+4. **If the developer will not run the app** — unit tests only, or they will deploy elsewhere —
+   record that as the run target and skip **only the artefact check in 5c**. Skipping it knowingly is
+   fine; skipping it silently is not. It does **not** skip 5c itself: the developer still confirms
+   the fix works before any RCA is written.
+
+Fill the **Run target** row of the context packet (Step 3a) with what you settled here — that filled
+row is what 5b passes on.
+
 ### 5b — Spawn the implementer
 
 Spawn a subagent and tell it to:
@@ -982,21 +1005,44 @@ Spawn a subagent and tell it to:
 1. **Read `reference\debugging-brief.md`** — the same brief, whose *Implementer* section is written
    for it.
 2. **Invoke `superpowers:systematic-debugging`** and carry out **Phase 4** against the approved plan.
-3. **Make the one fix**, edit byte-precisely, build the affected project, and leave the changes in the
-   working tree. If it cannot build, it says so explicitly rather than implying verification happened.
+3. **Make the one fix**, edit byte-precisely, then **build the project that deploys the change, not
+   merely the project that contains it** — the host project named in the run target. Leave the
+   changes in the working tree. If it cannot build, it says so explicitly rather than implying
+   verification happened.
 4. **Not branch, commit, push or open a PR** — those are yours, above.
-5. **Return the six-section implementer return** from the brief.
+5. **Return the seven-section implementer return** from the brief.
 
-Pass it the context packet from Step 3a, the investigator's root cause and evidence chain, and **the
+Pass it the context packet from Step 3a — **with the Run target row filled in from Step 5a·2** — the investigator's root cause and evidence chain, and **the
 approved plan as approved** — including anything the developer changed while approving it.
 
 ❄️ Mark it as before:
 
 > ❄️ **SUPERPOWERS · systematic-debugging** — *implementer subagent, Phase 4*
 
-### 5c — Hand back, and **stop**
+### 5c — Verify the fix is actually deployed, then hand back and **stop**
 
-Give the developer the diff, the build result, and how to verify it. Then stop and wait.
+**Before you hand anything back**, check §7 of the implementer return against the run target:
+
+1. **Compare the built artefact against the one the running app loads — by content hash, not
+   timestamp.** Timestamps mislead: a stale copy can share a size, and a copy step can preserve a
+   date.
+2. **If they differ, the fix is not live.** Send it back to the implementer — continue it, do not
+   build it yourself — to build the host project, re-compare, and only then hand back.
+3. **State the verification in the hand-back, naming what was compared.** *"Build succeeded"* is a
+   compile result; it is not evidence the change is running.
+4. **If the artefact could not be verified, say so plainly** and tell the developer they may be
+   testing a stale binary. Do not let it pass silently.
+5. If the run target is *tests only* or `UNKNOWN` because the developer will not run the app, say
+   which, and skip 1–4. Nothing else in 5c is skipped.
+
+**Why this gate exists.** Without it the developer tests the old binary, sees the original symptom,
+and reports the fix as not working. The paragraph below then routes that straight back to the
+investigator, which re-investigates correct code looking for a defect that is not there — and may
+layer a second "fix" on top to force the symptom away. A false negative costs a full investigation
+cycle and risks a wrong change reaching the RCA and the branch.
+
+Then give the developer the diff, the build result, the deployment verification, and how to verify
+it. Then stop and wait.
 
 **If they report a problem, it goes back to the subagent, never to you.** Continue the implementer
 with what they observed — or, if the fix was addressing the wrong cause, go back to the investigator
