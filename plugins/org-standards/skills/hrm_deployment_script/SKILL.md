@@ -1,5 +1,5 @@
 ---
-name: hrm_sql_standards
+name: hrm_deployment_script
 description: Create, convert, and review re-runnable PeoplesHR HRM-DB MSSQL deployment scripts and dep.xml registrations from user-supplied SQL. Use for new deployment files, raw-SQL conversion, localization changes, or PR-readiness review when supplied SQL must remain unchanged and only deployment guards and scaffolding may be added.
 ---
 

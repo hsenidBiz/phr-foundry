@@ -91,14 +91,14 @@ claude plugin uninstall org-standards
 
 | Skill | Use it for |
 | --- | --- |
-| `hrm_sql_standards` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
+| `hrm_deployment_script` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
 | `phx_debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
 | `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
 
-#### What `hrm_sql_standards` does
+#### What `hrm_deployment_script` does
 
 Given SQL you supply, it packages that SQL as a deployment file under
 `src/PeoplesHR/Current/<MODULE>/`, wraps it in re-runnable guards, adds
@@ -115,7 +115,7 @@ applied without changing your SQL, it stops and asks you for corrected source.
 Explicitly:
 
 ```
-/org-standards:hrm_sql_standards
+/org-standards:hrm_deployment_script
 ```
 
 Or just describe the work — Claude loads the skill on its own when you're
@@ -143,7 +143,7 @@ extra confirmation step after that.
 #### Copy-paste template
 
 ````text
-Use /org-standards:hrm_sql_standards to create an HRM-DB deployment script.
+Use /org-standards:hrm_deployment_script to create an HRM-DB deployment script.
 
 User name:
 Feature ID:

@@ -7,12 +7,12 @@ distributed through the [`phr-foundry`](../../README.md) marketplace.
 
 | Skill                | What it does                                                                 |
 | -------------------- | --------------------------------------------------------------------------- |
-| `hrm_sql_standards`  | Reformats SQL scripts into PHR standard format. **.NET Framework only.**     |
+| `hrm_deployment_script`  | Reformats SQL scripts into PHR standard format. **.NET Framework only.**     |
 | `phx_debugger`       | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA and status. |
 
 Invoke either explicitly with its plugin-prefixed slash command —
-`/org-standards:hrm_sql_standards`, `/org-standards:phx_debugger 141827` — or let
-Claude load it automatically: `hrm_sql_standards` when you write, edit or review
+`/org-standards:hrm_deployment_script`, `/org-standards:phx_debugger 141827` — or let
+Claude load it automatically: `hrm_deployment_script` when you write, edit or review
 SQL in a .NET Framework project, `phx_debugger` when a message carries an ADO bug
 ID with a request to investigate or fix it.
 

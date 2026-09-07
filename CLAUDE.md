@@ -12,7 +12,13 @@ One repo holds both the catalog and the plugins.
 - `plugins/org-standards/` — the one plugin
   - `.claude-plugin/plugin.json` — manifest. Also declares the plugin's one
     MCP server (see below).
-  - `skills/hrm_sql_standards/SKILL.md` — its own skill: reformat SQL to PHR standard, **.NET Framework only**
+  - `skills/hrm_deployment_script/SKILL.md` — its own skill: reformat SQL to PHR standard, **.NET Framework only**
+  - `skills/sql_standards_review/` — its own skill: review-only (never edits SQL) against
+    either the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL
+    standard, auto-detecting which system a script targets. Supporting files:
+    `reference/OLD_SQL_Standards.md` and `reference/NEW_SQL_Standards.md`, the full source
+    standards documents read by the skill during review. The whole folder ships together;
+    `SKILL.md` alone is not the skill.
   - `skills/phx_debugger/SKILL.md` — its own skill: fix an Azure DevOps bug end to
     end from its bug ID. Supporting files: `INSTALL.md` (prerequisites the plugin
     deliberately does not ship — the `superpowers` plugin and a per-developer ADO
@@ -36,7 +42,7 @@ One repo holds both the catalog and the plugins.
   held nothing but placeholder READMEs.
 
 ## Rules
-- **Version lives in `plugin.json` only** (currently `2.7.0`). Bump the semver on every
+- **Version lives in `plugin.json` only** (currently `2.8.0`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
 - New plugins: add a `plugins/<name>/` dir + a `marketplace.json` entry with

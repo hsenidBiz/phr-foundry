@@ -9,7 +9,7 @@
     {
       "name": "org-standards",
       "source": "./plugins/org-standards",
-      "description": "PeoplesHR organization standards. Ships the hrm_sql_standards skill for reformatting SQL to PHR conventions in .NET Framework projects, the phx_debugger skill for fixing an Azure DevOps bug end to end from its bug ID, and the phx-dbexplorer MCP server for browsing a database's schema."
+      "description": "PeoplesHR organization standards. Ships the hrm_deployment_script skill for reformatting SQL to PHR conventions in .NET Framework projects, the sql_standards_review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx_debugger skill for fixing an Azure DevOps bug end to end from its bug ID, and the phx-dbexplorer MCP server for browsing a database's schema."
     }
   ]
 }
