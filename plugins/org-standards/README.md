@@ -10,14 +10,16 @@ distributed through the [`phr-foundry`](../../README.md) marketplace.
 | `hrm-deployment-script`   | Reformats SQL scripts into PHR standard format. **.NET Framework only.**    |
 | `phx-sql-standards-review`| Review-only sign-off on a T-SQL script against the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
 | `phx-debugger`            | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA and status. |
+| `hrm-notification`        | Builds a module email notification on the `HRM-JS45-SERVICE` Job Scheduler — four views, claim column, `HS_HR_JS_*` rows, HTML template. Data, never C#. |
 
 Invoke any of them explicitly with its plugin-prefixed slash command —
 `/org-standards:hrm-deployment-script`, `/org-standards:phx-sql-standards-review`,
-`/org-standards:phx-debugger 141827` — or let Claude load it automatically:
-`hrm-deployment-script` when you write, edit or review SQL in a .NET Framework
-project, `phx-sql-standards-review` when a T-SQL script needs review or sign-off,
-`phx-debugger` when a message carries an ADO bug ID with a request to investigate
-or fix it.
+`/org-standards:phx-debugger 141827`, `/org-standards:hrm-notification` — or let
+Claude load it automatically: `hrm-deployment-script` when you write, edit or
+review SQL in a .NET Framework project, `phx-sql-standards-review` when a T-SQL
+script needs review or sign-off, `phx-debugger` when a message carries an ADO bug
+ID with a request to investigate or fix it, `hrm-notification` when you ask for an
+alert, reminder or email to be sent when something happens in a module.
 
 `phx-debugger` has prerequisites the plugin deliberately does not ship — the
 `superpowers` plugin and your own Azure DevOps MCP server. See
@@ -35,7 +37,7 @@ your own shell before launching Claude Code.
 
 ## Notes
 
-- **Versioned by semver** in `plugin.json` (currently `2.9.0`); bump it on each
+- **Versioned by semver** in `plugin.json` (currently `2.10.0`); bump it on each
   release that should reach users. See the root
   [README](../../README.md#versioning-manual-semver-in-pluginjson).
 - Skills and one MCP server: no agents or hooks.

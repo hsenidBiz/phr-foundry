@@ -94,6 +94,7 @@ claude plugin uninstall org-standards
 | `hrm-deployment-script` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
 | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the **OLD hSenid HRM** (.NET Framework) or **NEW PeoplesHR PHR-X** (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
 | `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
+| `hrm-notification` | Building an **email notification for any module** on the `HRM-JS45-SERVICE` Job Scheduler — the four views, the claim column, the `HS_HR_JS_*` configuration rows and the HTML template. Needs access to the client database. |
 
 | MCP server | Use it for |
 | --- | --- |
@@ -312,6 +313,65 @@ You do not install the skill separately — it arrives with `org-standards`.
 
 ---
 
+#### What `hrm-notification` does
+
+```
+/org-standards:hrm-notification
+```
+
+Plain language works too — *"send the approver an email when a claim is
+submitted"*, *"remind staff whose probation expires next week"*. Anything that
+asks for an alert, notification, reminder or email out of a module loads it.
+
+**A PeoplesHR notification is data, not code.** The web application does not send
+mail; `HRM-JS45-SERVICE` polls the database on a frequency and sends. So the
+deliverable is four views, one claim column, two configuration rows and one HTML
+file — and the skill will refuse to add a mail call to a C# service class, which
+would not survive a module upgrade anyway.
+
+**It checks whether the job already exists first**, before writing anything. The
+base product ships notifications for many modules and a client may have added
+more, so it queries `HS_HR_JS_TYPE` / `HS_HR_JS_MAIL_CONFIG` and reports which of
+three situations you are in: an existing job already does this (configure it), an
+existing job fires on a different event (build a second parallel set of views), or
+nothing exists (build from scratch). It will **not** narrow an existing base
+view's `WHERE` clause to fit your trigger — those views are shared by every
+client on the schema.
+
+#### What it needs from you
+
+The source table and its primary key, the exact column values that mean "send
+now", who receives the mail (requester, approver from `HS_HR_WF_MAIN`, HR, a fixed
+address), the merge fields the mail must show, and which repo owns the module. If
+the trigger or the recipient is ambiguous it asks; everything else it decides.
+
+It also needs a database to inspect, for both the discovery queries and the
+verification. The `phx-dbexplorer` MCP server below, which ships in this same
+plugin, is the intended way to give it one.
+
+#### What you get back
+
+The guarded claim-column `ALTER`, the four views (`_PEN`, `_ADD`, `_DAT`, `_UPD`)
+sharing one byte-identical `WHERE` clause, the `HS_PR_PARAMETERS` sender row, the
+`HS_HR_JS_TYPE` and `HS_HR_JS_MAIL_CONFIG` rows, an HTML template for the module
+repo's `alerts/` folder, and the verification queries — including the mechanical
+check that the four views have not drifted apart, which is the failure mode that
+silently mails the same row on every pass, forever.
+
+**Two things it cannot do for you**, and says so in the deliverable:
+
+1. **Deploy the HTML template to the scheduler host's alert directory.** If the
+   file is absent the job sends an empty body **and still stamps the claim
+   column**, so the row cannot be retried without clearing the claim by hand.
+2. **Confirm `HRM-JS45-SERVICE` is actually running against that database.** If it
+   is not, rows accumulate unclaimed and nothing is sent, with no error anywhere.
+
+> If you previously hand-copied this skill into your own `~/.claude/skills/`,
+> delete that copy once the plugin ships it — otherwise both load and your skill
+> list shows two near-identical entries.
+
+---
+
 #### `phx-dbexplorer` — database schema browsing
 
 Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer)
@@ -361,6 +421,10 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
 | `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback. |
 | `phx-debugger` stops saying it needs Superpowers | Run `/plugin install superpowers@claude-plugins-official` and restart. |
+| A notification mails the same row on every scheduler pass | The four views' `WHERE` clauses have drifted, so the `_UPD` view never returns the row and the claim column is never stamped. Run the predicate check in `hrm-notification`'s verification step. |
+| A notification arrives with empty merge fields | Same cause — the row is in `_PEN` but not in `_DAT`. Compare the four `WHERE` clauses; they must be byte-identical. |
+| A notification arrives with `@TOKEN` printed literally | That token has no matching column in the `_DAT` view. An unmatched token is not an error — it renders as written. |
+| Rows sit unclaimed and nothing is ever sent, with no error | Either the HTML template was never deployed to the scheduler host's alert directory, or `HRM-JS45-SERVICE` is not running against that database. Neither is visible from SQL. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |
