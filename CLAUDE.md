@@ -51,11 +51,18 @@ One repo holds both the catalog and the plugins.
   Use `hrm-` for anything targeting the old .NET Framework HRM system, `phx-` for anything
   targeting PHR-X/.NET Core or general tooling. Enforced in CI by
   `.github/workflows/validate.yml`.
-- **`docs/USAGE.md` must be updated in the same change whenever a skill is added, renamed,
-  or removed** — non-negotiable. Add/update/remove its row in the relevant plugin's skill
-  table (Plugin catalog section) and its own `#### What \`<skill>\` does` walkthrough
-  (invocation, inputs, output). This is manual — `claude plugin validate .` does not check
-  doc coverage, so a missed update won't fail CI, only reviewer eyes will catch it.
+- **Every skill add/rename/remove, and every `plugin.json` version bump, must update all
+  of the following in the same change** — non-negotiable. `claude plugin validate .` does
+  not check doc coverage, so a missed update won't fail CI — only reviewer eyes catch it:
+  - `docs/USAGE.md` — add/update/remove the skill's row in the Plugin catalog skill table,
+    and its own `#### What \`<skill>\` does` walkthrough (invocation, inputs, output).
+  - `README.md` (repo root) — the repository-layout tree, the "What's in `org-standards`"
+    skills/MCP-server table, and any invocation example listing skills by name.
+  - `plugins/org-standards/README.md` — its Skills table and invocation-examples sentence.
+  - `CLAUDE.md` (this file) — the `## Layout` bullet list under `plugins/org-standards/`.
+  - Any `version` mentioned in prose (e.g. "currently `X.Y.Z`") in `README.md` and
+    `plugins/org-standards/README.md` must match the new `plugin.json` version — these are
+    plain text, not derived, so they silently rot independently of the version bump itself.
 - New plugins: add a `plugins/<name>/` dir + a `marketplace.json` entry with
   `source: "./plugins/<name>"`, and a `version` in the plugin's `plugin.json`.
 - Skills, plus the one `phx-dbexplorer` MCP server declared in `plugin.json` — no

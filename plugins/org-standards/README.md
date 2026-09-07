@@ -5,16 +5,19 @@ distributed through the [`phr-foundry`](../../README.md) marketplace.
 
 ## Skills
 
-| Skill                | What it does                                                                 |
-| -------------------- | --------------------------------------------------------------------------- |
-| `hrm-deployment-script`  | Reformats SQL scripts into PHR standard format. **.NET Framework only.**     |
-| `phx-debugger`       | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA and status. |
+| Skill                     | What it does                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------|
+| `hrm-deployment-script`   | Reformats SQL scripts into PHR standard format. **.NET Framework only.**    |
+| `phx-sql-standards-review`| Review-only sign-off on a T-SQL script against the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
+| `phx-debugger`            | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA and status. |
 
-Invoke either explicitly with its plugin-prefixed slash command —
-`/org-standards:hrm-deployment-script`, `/org-standards:phx-debugger 141827` — or let
-Claude load it automatically: `hrm-deployment-script` when you write, edit or review
-SQL in a .NET Framework project, `phx-debugger` when a message carries an ADO bug
-ID with a request to investigate or fix it.
+Invoke any of them explicitly with its plugin-prefixed slash command —
+`/org-standards:hrm-deployment-script`, `/org-standards:phx-sql-standards-review`,
+`/org-standards:phx-debugger 141827` — or let Claude load it automatically:
+`hrm-deployment-script` when you write, edit or review SQL in a .NET Framework
+project, `phx-sql-standards-review` when a T-SQL script needs review or sign-off,
+`phx-debugger` when a message carries an ADO bug ID with a request to investigate
+or fix it.
 
 `phx-debugger` has prerequisites the plugin deliberately does not ship — the
 `superpowers` plugin and your own Azure DevOps MCP server. See
@@ -32,7 +35,7 @@ your own shell before launching Claude Code.
 
 ## Notes
 
-- **Versioned by semver** in `plugin.json` (currently `2.2.1`); bump it on each
+- **Versioned by semver** in `plugin.json` (currently `2.9.0`); bump it on each
   release that should reach users. See the root
   [README](../../README.md#versioning-manual-semver-in-pluginjson).
 - Skills and one MCP server: no agents or hooks.
