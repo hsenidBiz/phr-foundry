@@ -45,6 +45,14 @@ One repo holds both the catalog and the plugins.
 - **Version lives in `plugin.json` only** (currently `2.8.0`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
+- **New skill names must start with `hrm-` or `phx-` and be kebab-case** — non-negotiable.
+  The directory under `plugins/<plugin>/skills/` (which is also the skill's invocation
+  name, e.g. `org-standards:hrm-my-skill`) must match `^(hrm|phx)-[a-z0-9]+(-[a-z0-9]+)*$`.
+  Use `hrm-` for anything targeting the old .NET Framework HRM system, `phx-` for anything
+  targeting PHR-X/.NET Core or general tooling. Enforced in CI by
+  `.github/workflows/validate.yml`. This applies to new skills only — existing skill
+  folders (`hrm_deployment_script`, `phx_debugger`, `sql_standards_review`) predate the
+  rule and are grandfathered; don't rename them as a side effect of unrelated work.
 - New plugins: add a `plugins/<name>/` dir + a `marketplace.json` entry with
   `source: "./plugins/<name>"`, and a `version` in the plugin's `plugin.json`.
 - Skills, plus the one `phx-dbexplorer` MCP server declared in `plugin.json` — no
