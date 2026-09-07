@@ -12,14 +12,14 @@ One repo holds both the catalog and the plugins.
 - `plugins/org-standards/` — the one plugin
   - `.claude-plugin/plugin.json` — manifest. Also declares the plugin's one
     MCP server (see below).
-  - `skills/hrm_deployment_script/SKILL.md` — its own skill: reformat SQL to PHR standard, **.NET Framework only**
-  - `skills/sql_standards_review/` — its own skill: review-only (never edits SQL) against
+  - `skills/hrm-deployment-script/SKILL.md` — its own skill: reformat SQL to PHR standard, **.NET Framework only**
+  - `skills/phx-sql-standards-review/` — its own skill: review-only (never edits SQL) against
     either the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL
     standard, auto-detecting which system a script targets. Supporting files:
     `reference/OLD_SQL_Standards.md` and `reference/NEW_SQL_Standards.md`, the full source
     standards documents read by the skill during review. The whole folder ships together;
     `SKILL.md` alone is not the skill.
-  - `skills/phx_debugger/SKILL.md` — its own skill: fix an Azure DevOps bug end to
+  - `skills/phx-debugger/SKILL.md` — its own skill: fix an Azure DevOps bug end to
     end from its bug ID. Supporting files: `INSTALL.md` (prerequisites the plugin
     deliberately does not ship — the `superpowers` plugin and a per-developer ADO
     MCP server) and `reference/` (`debugging-brief.md`, `rca-template.md`, both
@@ -42,17 +42,15 @@ One repo holds both the catalog and the plugins.
   held nothing but placeholder READMEs.
 
 ## Rules
-- **Version lives in `plugin.json` only** (currently `2.8.0`). Bump the semver on every
+- **Version lives in `plugin.json` only** (currently `2.9.0`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
-- **New skill names must start with `hrm-` or `phx-` and be kebab-case** — non-negotiable.
+- **Skill names must start with `hrm-` or `phx-` and be kebab-case** — non-negotiable.
   The directory under `plugins/<plugin>/skills/` (which is also the skill's invocation
   name, e.g. `org-standards:hrm-my-skill`) must match `^(hrm|phx)-[a-z0-9]+(-[a-z0-9]+)*$`.
   Use `hrm-` for anything targeting the old .NET Framework HRM system, `phx-` for anything
   targeting PHR-X/.NET Core or general tooling. Enforced in CI by
-  `.github/workflows/validate.yml`. This applies to new skills only — existing skill
-  folders (`hrm_deployment_script`, `phx_debugger`, `sql_standards_review`) predate the
-  rule and are grandfathered; don't rename them as a side effect of unrelated work.
+  `.github/workflows/validate.yml`.
 - New plugins: add a `plugins/<name>/` dir + a `marketplace.json` entry with
   `source: "./plugins/<name>"`, and a `version` in the plugin's `plugin.json`.
 - Skills, plus the one `phx-dbexplorer` MCP server declared in `plugin.json` — no

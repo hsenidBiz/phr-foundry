@@ -1,11 +1,11 @@
 # The debugging brief
 
-**Read this if you were spawned by `phx_debugger`.** It is the standing brief for both of its
+**Read this if you were spawned by `phx-debugger`.** It is the standing brief for both of its
 subagents — the **investigator** (Phases 1–3) and the **implementer** (Phase 4). Your spawn prompt
 says which one you are and carries the bug context; this file says how the work is done and what you
 must return.
 
-`phx_debugger` itself does not debug. It talks to Azure DevOps, gates the developer's decisions, and
+`phx-debugger` itself does not debug. It talks to Azure DevOps, gates the developer's decisions, and
 formats the RCA. **Finding the root cause and fixing it are yours.** Do not hand back a half-answer
 expecting the parent to finish it — it will not, and cannot.
 
@@ -52,7 +52,7 @@ your return rather than trying a fourth.
 
 ## The rules you inherit
 
-These are `phx_debugger`'s and they bind you exactly as they bind it.
+These are `phx-debugger`'s and they bind you exactly as they bind it.
 
 **1 · Azure DevOps only through the MCP server.** No `az` / `az devops` CLI, no `curl` or
 `Invoke-RestMethod` against `dev.azure.com`, no personal access token from any source, and no script

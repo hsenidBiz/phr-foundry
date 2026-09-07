@@ -1,5 +1,5 @@
 ---
-name: sql_standards_review
+name: phx-sql-standards-review
 description: "Use when a T-SQL/SQL Server script (query, proc, function, view, or migration) for the PeoplesHR/hSenid product line needs review or sign-off. Identifies whether the script targets the OLD hSenid HRM system or the NEW PeoplesHR PHR-X (.NET Core) system, then reviews it against that system's own standard."
 ---
 

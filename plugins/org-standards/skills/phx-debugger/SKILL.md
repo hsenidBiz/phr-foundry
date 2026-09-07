@@ -1,5 +1,5 @@
 ---
-name: phx_debugger
+name: phx-debugger
 description: Fixes an Azure DevOps bug end to end from its bug ID — reads the work item, delegates root cause and fix to the Superpowers systematic-debugging skill in subagents, then writes the RCA back and moves the status, gating on the developer's approval at each step. Use whenever a message carries an ADO bug ID or work item URL with a request to investigate, debug, root-cause or fix it — "fix bug 141827", "why is AB#141827 happening", a pasted _workitems/edit link. The bug ID is required; four hard gates (ADO MCP server, superpowers plugin, valid ID, a work item that resolves) stop the run before anything is read or touched.
 ---
 
@@ -66,7 +66,7 @@ colours, so the marker is the glyph and the blockquote, not a literal blue. Say 
 It ships inside the `org-standards` plugin, so the slash command carries the plugin prefix:
 
 ```
-/org-standards:phx_debugger <bugId or work item URL> [extra code paths]
+/org-standards:phx-debugger <bugId or work item URL> [extra code paths]
 ```
 
 Plain language is equally valid — *"fix ADO bug 141827"*. Both paths run the same procedure from
@@ -445,7 +445,7 @@ were missing, and end the run:
 > ```
 >
 > Sign in to Azure first (`az login`, or the auth method your org uses), then **restart Claude Code**
-> and run `/org-standards:phx_debugger` again. `/mcp` will show `ado` as connected when it is ready.
+> and run `/org-standards:phx-debugger` again. `/mcp` will show `ado` as connected when it is ready.
 >
 > Setup detail is in this skill's `INSTALL.md`.
 
@@ -487,7 +487,7 @@ it: a plugin on disk but not in your skill list is not usable in this session ei
 > /plugin install superpowers@claude-plugins-official
 > ```
 >
-> Then **restart Claude Code** and run `/org-standards:phx_debugger` again — a freshly installed
+> Then **restart Claude Code** and run `/org-standards:phx-debugger` again — a freshly installed
 > plugin does not register in the session that installed it, so if you have already run that command,
 > the restart is the missing step.
 >
@@ -830,7 +830,7 @@ delegate, and check what comes back is complete.
 
 This is the division the whole skill rests on:
 
-| `phx_debugger` — you | The subagent |
+| `phx-debugger` — you | The subagent |
 |---|---|
 | Azure DevOps: read the bug, comment, write the RCA, move the state | Root cause investigation and the fix |
 | The developer's gates — confirm, approve, test | The code: reading it, tracing it, changing it |

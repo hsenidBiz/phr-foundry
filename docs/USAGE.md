@@ -91,14 +91,14 @@ claude plugin uninstall org-standards
 
 | Skill | Use it for |
 | --- | --- |
-| `hrm_deployment_script` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
-| `phx_debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
+| `hrm-deployment-script` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
+| `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
 | `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
 
-#### What `hrm_deployment_script` does
+#### What `hrm-deployment-script` does
 
 Given SQL you supply, it packages that SQL as a deployment file under
 `src/PeoplesHR/Current/<MODULE>/`, wraps it in re-runnable guards, adds
@@ -115,7 +115,7 @@ applied without changing your SQL, it stops and asks you for corrected source.
 Explicitly:
 
 ```
-/org-standards:hrm_deployment_script
+/org-standards:hrm-deployment-script
 ```
 
 Or just describe the work — Claude loads the skill on its own when you're
@@ -143,7 +143,7 @@ extra confirmation step after that.
 #### Copy-paste template
 
 ````text
-Use /org-standards:hrm_deployment_script to create an HRM-DB deployment script.
+Use /org-standards:hrm-deployment-script to create an HRM-DB deployment script.
 
 User name:
 Feature ID:
@@ -176,12 +176,12 @@ you, never written into the deployment files), and any risks or blockers.
 
 ---
 
-#### What `phx_debugger` does
+#### What `phx-debugger` does
 
 Open Claude Code in the repository you are debugging, then give it a bug ID:
 
 ```
-/org-standards:phx_debugger 141827
+/org-standards:phx-debugger 141827
 ```
 
 Plain language works too — *"fix ADO bug 141827"*. Either way the message must
@@ -218,7 +218,7 @@ run — and that comment always **@mentions whoever reported the bug**, so the
 questions reach them instead of waiting to be noticed. It tells you who it will
 mention before you agree, and never comments on the ticket unprompted. Then it **hands the bug to
 the Superpowers `systematic-debugging` skill**, running in a subagent, which finds
-the root cause and later writes the fix. `phx_debugger` itself never debugs and
+the root cause and later writes the fix. `phx-debugger` itself never debugs and
 never edits code: it owns Azure DevOps, your approval gates and the RCA. It
 **stops** for you to approve the fix plan, and stops again for you to test the
 diff. When it asks about the branch it also asks **where you will test the fix**
@@ -260,7 +260,7 @@ nothing and touched nothing. The two you install once:
 `az devops`, REST or a personal access token as a fallback — not even if you ask
 it to. Calls run as *your* identity, so your existing ADO permissions apply
 unchanged. Full prerequisites and troubleshooting:
-[`plugins/org-standards/skills/phx_debugger/INSTALL.md`](../plugins/org-standards/skills/phx_debugger/INSTALL.md).
+[`plugins/org-standards/skills/phx-debugger/INSTALL.md`](../plugins/org-standards/skills/phx-debugger/INSTALL.md).
 You do not install the skill separately — it arrives with `org-standards`.
 
 ---
@@ -312,8 +312,8 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
-| `phx_debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback. |
-| `phx_debugger` stops saying it needs Superpowers | Run `/plugin install superpowers@claude-plugins-official` and restart. |
+| `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback. |
+| `phx-debugger` stops saying it needs Superpowers | Run `/plugin install superpowers@claude-plugins-official` and restart. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |

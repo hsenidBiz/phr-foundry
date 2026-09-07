@@ -1,6 +1,6 @@
-# ❄️ Setting up the `phx_debugger` skill
+# ❄️ Setting up the `phx-debugger` skill
 
-`phx_debugger` fixes an Azure DevOps bug end to end from its bug ID, with root cause investigation
+`phx-debugger` fixes an Azure DevOps bug end to end from its bug ID, with root cause investigation
 driven by the **Superpowers `systematic-debugging`** skill.
 
 **You do not install the skill itself.** It ships inside the `org-standards` plugin — if you have the
@@ -45,7 +45,7 @@ This skill runs its investigation through `superpowers:systematic-debugging`. In
 Then **restart Claude Code** — a freshly installed plugin does not register in the session that
 installed it.
 
-Confirm it worked by typing `/` and looking for `systematic-debugging` in the list. `phx_debugger`
+Confirm it worked by typing `/` and looking for `systematic-debugging` in the list. `phx-debugger`
 checks this itself before it does anything else, and stops with that same instruction if the skill
 is not there.
 
@@ -96,7 +96,7 @@ read a repository in the browser, the skill cannot read it either.
 there is no code path to pass:
 
 ```
-/org-standards:phx_debugger 141827
+/org-standards:phx-debugger 141827
 ```
 
 Or just describe it — *"fix ADO bug 141827"*. Either way the message must carry the **bug ID**; that
@@ -145,7 +145,7 @@ skipped. How hard it *thinks* is the session's model and effort, so for a diffic
      the text and posts nothing. It will not comment unless you ask it to, and will not change the
      state without being asked.
 3. ❄️ **Hands the bug to `systematic-debugging`** — the superpowered step, and the one that does the
-   actual debugging. `phx_debugger` packages up everything it learned about the bug and spawns a
+   actual debugging. `phx-debugger` packages up everything it learned about the bug and spawns a
    **subagent** that runs the superpower's four phases under one Iron Law: *no fixes without root
    cause investigation first*. That subagent reads the error exactly, traces the bad value back to
    where it originates, compares against a module that handles the same case correctly, then states
@@ -156,7 +156,7 @@ skipped. How hard it *thinks* is the session's model and effort, so for a diffic
 4. **Presents a fix plan and stops** for your approval.
 5. **Hands the approved plan to a second subagent**, which makes the one fix, edits byte-precisely so
    the diff contains only the intended change, and builds — saying so plainly if it could not.
-   `phx_debugger` handles the branch itself,
+   `phx-debugger` handles the branch itself,
    then gives you the diff to test. It loops until you confirm it works — and problems go back to the
    subagent, never to a side-fix by the outer skill.
 6. **Writes the full RCA** into the work item's `Custom.*` fields, following the RCA template, as a
@@ -173,7 +173,7 @@ skipped. How hard it *thinks* is the session's model and effort, so for a diffic
 ## What is in this folder
 
 ```
-skills\phx_debugger\
+skills\phx-debugger\
     SKILL.md               the procedure itself
     INSTALL.md             this page
     reference\debugging-brief.md   the brief both subagents read

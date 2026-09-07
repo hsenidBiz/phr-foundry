@@ -31,9 +31,6 @@ jobs:
           for dir in plugins/*/skills/*/; do
             [ -d "$dir" ] || continue
             name="$(basename "$dir")"
-            if [[ "$name" == "hrm_deployment_script" || "$name" == "phx_debugger" || "$name" == "sql_standards_review" ]]; then
-              continue # grandfathered — predate the naming rule
-            fi
             if ! [[ "$name" =~ ^(hrm|phx)-[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
               echo "::error::Skill '$name' violates naming rule: must start with 'hrm-' or 'phx-' and be kebab-case (e.g. hrm-my-skill)."
               fail=1

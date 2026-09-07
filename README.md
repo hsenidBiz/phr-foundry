@@ -20,9 +20,9 @@ and the plugins it distributes (`plugins/`).
 │       │   └── plugin.json       # Manifest (version: 2.7.0 — see Versioning);
 │       │                         # also declares the phx-dbexplorer MCP server
 │       ├── skills/
-│       │   ├── hrm_deployment_script/
+│       │   ├── hrm-deployment-script/
 │       │   │   └── SKILL.md       # PHR SQL deployment-script standards
-│       │   └── phx_debugger/
+│       │   └── phx-debugger/
 │       │       └── SKILL.md       # Azure DevOps bug fixing, end to end
 │       └── README.md
 ├── .github/
@@ -39,7 +39,7 @@ The plugin ships one skill of its own, plus one MCP server.
 
 | Source | Skill(s) / MCP server | Notes |
 | --- | --- | --- |
-| **This repo (own skill)** | `hrm_deployment_script` | PHR-specific: reformat/scaffold HRM-DB MSSQL deployment SQL, **.NET Framework only**. |
+| **This repo (own skill)** | `hrm-deployment-script` | PHR-specific: reformat/scaffold HRM-DB MSSQL deployment SQL, **.NET Framework only**. |
 | **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a **public** .NET repo, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use (the repo must stay public — the download is unauthenticated). |
 
 > **Before `phx-dbexplorer` will work**, you must set `PHX_DB_TYPE`,
@@ -75,7 +75,7 @@ claude plugin install org-standards@phr-foundry
 The skill is namespaced under the plugin, so invoke it with:
 
 ```shell
-/org-standards:hrm_deployment_script
+/org-standards:hrm-deployment-script
 ```
 
 Claude also loads the skill automatically when you work on SQL in a

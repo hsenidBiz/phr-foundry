@@ -7,18 +7,18 @@ distributed through the [`phr-foundry`](../../README.md) marketplace.
 
 | Skill                | What it does                                                                 |
 | -------------------- | --------------------------------------------------------------------------- |
-| `hrm_deployment_script`  | Reformats SQL scripts into PHR standard format. **.NET Framework only.**     |
-| `phx_debugger`       | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA and status. |
+| `hrm-deployment-script`  | Reformats SQL scripts into PHR standard format. **.NET Framework only.**     |
+| `phx-debugger`       | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA and status. |
 
 Invoke either explicitly with its plugin-prefixed slash command —
-`/org-standards:hrm_deployment_script`, `/org-standards:phx_debugger 141827` — or let
-Claude load it automatically: `hrm_deployment_script` when you write, edit or review
-SQL in a .NET Framework project, `phx_debugger` when a message carries an ADO bug
+`/org-standards:hrm-deployment-script`, `/org-standards:phx-debugger 141827` — or let
+Claude load it automatically: `hrm-deployment-script` when you write, edit or review
+SQL in a .NET Framework project, `phx-debugger` when a message carries an ADO bug
 ID with a request to investigate or fix it.
 
-`phx_debugger` has prerequisites the plugin deliberately does not ship — the
+`phx-debugger` has prerequisites the plugin deliberately does not ship — the
 `superpowers` plugin and your own Azure DevOps MCP server. See
-[`skills/phx_debugger/INSTALL.md`](skills/phx_debugger/INSTALL.md).
+[`skills/phx-debugger/INSTALL.md`](skills/phx-debugger/INSTALL.md).
 
 ## MCP servers
 
