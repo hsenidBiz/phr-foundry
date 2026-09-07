@@ -177,6 +177,52 @@ you, never written into the deployment files), and any risks or blockers.
 
 ---
 
+#### What `phx-sql-standards-review` does
+
+Review-only sign-off on a T-SQL script — it never edits your SQL, only reports
+against the standard. There are two independent standards, one per system:
+the **OLD hSenid HRM** (.NET Framework) standard covers naming, data
+types/deployment idempotency, and performance only; the **NEW PeoplesHR
+PHR-X** (.NET Core) standard covers all of that plus formatting, query
+structure, aggregation, transactions, centralized exception logging,
+security, comments/metadata, stored-procedure conventions, and testing
+sign-off.
+
+It identifies which system your script targets before reviewing anything —
+from an explicit statement, file/header metadata, or naming style (OLD is
+`UPPERCASE` with an `HS_` prefix; NEW is lowercase `snake_case` with no
+prefix) — and asks rather than guesses if the signal is ambiguous. Every
+finding in the report is prefixed with the system name (e.g. "NEW ERR-03",
+"OLD DEP-06"), because both standards reuse the same bare rule IDs for
+unrelated rules.
+
+#### How to invoke it
+
+Explicitly:
+
+```
+/org-standards:phx-sql-standards-review
+```
+
+Or describe the work — e.g. *"review this stored proc for PR sign-off"* —
+and Claude loads the skill on its own when T-SQL needs review.
+
+#### What it needs from you
+
+The **complete SQL script** to review. If the target system isn't obvious
+from an explicit statement, file path, or naming style, it asks which system
+before reviewing rather than guessing.
+
+#### What you get back
+
+A report with: the detected/confirmed system and its basis, a verdict
+(`BLOCKED (N must-fix items)` / `PASS (no MUST violations)` / `PASS WITH
+SHOULD-LEVEL NOTES`), a table of MUST violations (rule ID, offending
+line/snippet, problem, fix), SHOULD-level notes for undocumented deviations,
+and any MAY-level judgment notes worth flagging.
+
+---
+
 #### What `phx-debugger` does
 
 Open Claude Code in the repository you are debugging, then give it a bug ID:
