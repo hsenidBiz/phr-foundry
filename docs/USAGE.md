@@ -27,6 +27,21 @@ claude plugin install org-standards@phr-foundry
 The same commands work as slash commands inside a Claude Code session
 (`/plugin marketplace add ...`, `/plugin install ...`).
 
+**Business Analysts install `ba-kit` instead**, not as well:
+
+```shell
+claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
+claude plugin install ba-kit@phr-foundry
+```
+
+> ⚠️ **One or the other, never both.** `org-standards` ships
+> `phx-product-context` and `ba-kit` ships `phx-business-context`. They search the
+> same two WeKnora knowledge bases in opposite orders and answer in different
+> voices, so with both installed they compete on question wording and misroute.
+> Developers take `org-standards`; BAs take `ba-kit`; anyone genuinely doing both
+> jobs takes `org-standards`, whose skill keeps the business rationale as a
+> secondary.
+
 **If the first command hangs or fails on authentication**, your machine has no
 cached GitHub credentials. Use the URL with the account prefix so Git knows
 which account to prompt for:
@@ -95,10 +110,12 @@ claude plugin uninstall org-standards
 | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the **OLD hSenid HRM** (.NET Framework) or **NEW PeoplesHR PHR-X** (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
 | `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 | `hrm-notification` | Building an **email notification for any module** on the `HRM-JS45-SERVICE` Job Scheduler — the four views, the claim column, the `HS_HR_JS_*` configuration rows and the HTML template. Needs access to the client database. |
+| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
 | `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
+| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
 
 #### What `hrm-deployment-script` does
 
@@ -372,6 +389,91 @@ silently mails the same row on every pass, forever.
 
 ---
 
+#### What `phx-product-context` does
+
+```
+/org-standards:phx-product-context
+```
+
+You will rarely type that. The skill fires on its own whenever PeoplesHR or one of
+its modules comes up — designing or changing a feature, writing or reviewing code,
+investigating a defect, explaining how something behaves. It skips itself for purely
+mechanical work (renaming, formatting, a syntax question, generic programming help),
+and does not announce the skip.
+
+**What it does before answering.** It turns your question into a real search query
+built from the module in play, the file or ticket open and the conversation — *"why
+is this rejected"* becomes *"leave approval rejection overlapping date range
+validation"* — then searches the WeKnora knowledge bases through the `weknora` MCP
+server: `Product Development` deep for the rules and intent, `PeoplesHR Academy`
+shallow to confirm how the behaviour appears to the user. It retries once if the
+results are thin, and for broad *"explain module X"* questions it reads the written
+overview instead of collecting scattered passages.
+
+**What you get back.** A technical answer — data model, rules, edge cases,
+integration points — with the business rationale kept visible, and the WeKnora
+documents cited by title so you can open them.
+
+**When WeKnora has nothing, it says so and stops.** It will not fill the gap with
+assumptions about PeoplesHR behaviour. That is the point of the skill: an answer you
+can act on, or an honest blank.
+
+#### What `phx-product-context` needs from you
+
+One environment variable: `WEKNORA_MCP_TOKEN`, the bearer token for the `weknora`
+MCP server. It is **one shared token for the whole team**, handed out through your
+credential channel — your password manager or IT onboarding. It is not in this
+repo, which is public, and must never be committed, pasted into a chat, or typed
+into a Claude conversation. Ask PeoplesHR &lt;sanuja.a@peopleshr.com&gt; if you do
+not have it.
+
+On Windows, prompt for it rather than using `setx`, which would put the token in
+your PowerShell history and in `argv`:
+
+```powershell
+$s = Read-Host -AsSecureString 'WEKNORA_MCP_TOKEN'
+[Environment]::SetEnvironmentVariable('WEKNORA_MCP_TOKEN',
+  [Runtime.InteropServices.Marshal]::PtrToStringBSTR(
+    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)), 'User')
+```
+
+That keeps the value out of history and argv. It is not a secret store: Windows
+keeps user environment variables as plaintext in `HKCU\Environment`, the same
+exposure `PHX_DB_CONNECTION_STRING` already has here. On macOS/Linux, `export` it
+from your shell profile with the profile file at mode `600`.
+
+> ⚠️ **Then restart Claude Code — and only then.** Windows reads user environment
+> variables at process start, so a terminal or Claude Code already running when you
+> set the variable will never see it. A correctly installed token therefore presents
+> exactly as a broken one: an empty `$env:WEKNORA_MCP_TOKEN` and a missing-variable
+> warning for `weknora` in `claude mcp list`. Check
+> `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the
+> registry, not the process — before concluding anything is wrong.
+
+Full prerequisites and troubleshooting:
+[`plugins/org-standards/skills/phx-product-context/INSTALL.md`](../plugins/org-standards/skills/phx-product-context/INSTALL.md).
+
+---
+
+#### `weknora` — PeoplesHR knowledge retrieval
+
+A remote `type: "http"` MCP server on the WeKnora VM
+(`https://weknora.phrsandbox.dev/mcp`), behind the same nginx as the WeKnora web
+app. Nothing is downloaded and nothing runs locally — installing the plugin and
+setting `WEKNORA_MCP_TOKEN` is the whole client side. It backs
+`phx-product-context` (and `phx-business-context` in `ba-kit`); you are not expected
+to call its tools by hand.
+
+**It is read-only, but not obviously so.** `tools/list` advertises all 28 WeKnora
+tools, writes included — the tool list takes no notice of the credential behind it.
+What actually holds the line is a `retrieve`-only, knowledge-base-scoped API key
+held on the server, which answers any write with
+`403 Forbidden: API key scope does not allow this operation`. So do not treat the
+endpoint as read-only by construction, and expect Claude to occasionally try a write
+tool and be refused.
+
+---
+
 #### `phx-dbexplorer` — database schema browsing
 
 Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer)
@@ -411,6 +513,52 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 
 ---
 
+### `ba-kit` — PeoplesHR product knowledge for Business Analysts
+
+| Skill | Use it for |
+| --- | --- |
+| `phx-business-context` | Answering **how a PeoplesHR module works** in business terms — module behaviour, user flows, configuration and the rules behind them — grounded in the product documentation held in WeKnora and citing the documents used. Needs `WEKNORA_MCP_TOKEN`. |
+
+| MCP server | Use it for |
+| --- | --- |
+| `weknora` | The same read-only WeKnora retrieval server described [above](#weknora--peopleshr-knowledge-retrieval). |
+
+#### What `phx-business-context` does
+
+```
+/ba-kit:phx-business-context
+```
+
+As with the developer skill, you will rarely type that — it fires on its own
+whenever PeoplesHR or one of its modules comes up while you write requirements,
+design a solution, answer a client question or explain how something works. It skips
+itself for work with no PeoplesHR behaviour in it: formatting, summarising your own
+text, general writing help.
+
+It builds a real search query from the module and business process in play — *"how
+does this work for part timers"* becomes *"leave entitlement proration part-time
+employees"* — then leads with the `PeoplesHR Academy` knowledge base, which
+describes how the product actually behaves for a user, and uses `Product
+Development` for the intent and rules behind it. That is the **opposite** order to
+the developer skill, and the reason the two must not be installed together.
+
+**What you get back.** A business answer — what the user sees, the process, the
+rules, the configuration — with no code or schemas unless you ask, and the WeKnora
+documents cited by title.
+
+**When WeKnora has nothing, it says so and stops**, and never invents product
+behaviour. A BA's output becomes a requirement someone builds, so a confident guess
+here is expensive.
+
+#### What `phx-business-context` needs from you
+
+The same `WEKNORA_MCP_TOKEN` described under
+[`phx-product-context`](#what-phx-product-context-needs-from-you), set the same way
+— and the same restart afterwards. Full prerequisites:
+[`plugins/ba-kit/skills/phx-business-context/INSTALL.md`](../plugins/ba-kit/skills/phx-business-context/INSTALL.md).
+
+---
+
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -427,6 +575,12 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 | Rows sit unclaimed and nothing is ever sent, with no error | Either the HTML template was never deployed to the scheduler host's alert directory, or `HRM-JS45-SERVICE` is not running against that database. Neither is visible from SQL. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
+| `claude mcp list` warns that `WEKNORA_MCP_TOKEN` is missing | Either it is genuinely unset, or this session started before you set it. Check `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the registry, not `$env:` — then fully restart Claude Code. |
+| WeKnora searches fail with `401` | The token is wrong, or was not sent at all. Re-set it from your credential channel and restart. |
+| WeKnora returns `503` with a JSON body | The WeKnora VM is in maintenance mode. Nothing to fix client-side; try again shortly. |
+| A WeKnora search returns an error but the server is reachable | The token is fine — authentication and authorisation fail at different layers here. The knowledge-base name or the server-side API key's scope is the issue. Report it rather than retrying with different wording. |
+| Claude tries to create or delete something in WeKnora and is refused `403` | Expected. The MCP server advertises all 28 tools, but the API key behind it is `retrieve`-only. Nothing can be written to WeKnora from Claude. |
+| Both `phx-product-context` and `phx-business-context` appear in your skill list | You have `org-standards` and `ba-kit` installed together. They misroute — uninstall the one that isn't your role. |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |
 
 ## Reporting a problem
