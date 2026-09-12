@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "org-standards",
-  "version": "2.10.0",
-  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, the hrm-notification skill for building a Job Scheduler email notification for any module, and the phx-dbexplorer MCP server for browsing a database's schema.",
+  "version": "2.11.0",
+  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, the phx-dbexplorer MCP server for browsing a database's schema, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
@@ -15,6 +15,13 @@
         "DB_TYPE": "${PHX_DB_TYPE}",
         "CONNECTION_STRING": "${PHX_DB_CONNECTION_STRING}",
         "SCHEMA_FILTER": "${PHX_DB_SCHEMA_FILTER}"
+      }
+    },
+    "weknora": {
+      "type": "http",
+      "url": "https://weknora.phrsandbox.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${WEKNORA_MCP_TOKEN}"
       }
     }
   }

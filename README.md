@@ -15,19 +15,28 @@ and the plugins it distributes (`plugins/`).
 ├── .claude-plugin/
 │   └── marketplace.json          # Catalog: lists every plugin and its source
 ├── plugins/
-│   └── org-standards/            # One plugin
+│   ├── org-standards/            # Developer plugin
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json       # Manifest (version: 2.11.0 — see Versioning); also
+│   │   │                         # declares the phx-dbexplorer and weknora MCP servers
+│   │   ├── skills/
+│   │   │   ├── hrm-deployment-script/
+│   │   │   │   └── SKILL.md       # PHR SQL deployment-script standards, .NET Framework only
+│   │   │   ├── phx-sql-standards-review/
+│   │   │   │   └── SKILL.md       # Review-only OLD/NEW SQL standards sign-off
+│   │   │   ├── phx-debugger/
+│   │   │   │   └── SKILL.md       # Azure DevOps bug fixing, end to end
+│   │   │   ├── hrm-notification/
+│   │   │   │   └── SKILL.md       # Job Scheduler email notifications
+│   │   │   └── phx-product-context/
+│   │   │       └── SKILL.md       # PeoplesHR product knowledge from WeKnora (developer)
+│   │   └── README.md
+│   └── ba-kit/                   # Business Analyst plugin — never install both
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 2.10.0 — see Versioning);
-│       │                         # also declares the phx-dbexplorer MCP server
+│       │   └── plugin.json       # Manifest (version: 1.0.0); declares the weknora MCP server
 │       ├── skills/
-│       │   ├── hrm-deployment-script/
-│       │   │   └── SKILL.md       # PHR SQL deployment-script standards, .NET Framework only
-│       │   ├── phx-sql-standards-review/
-│       │   │   └── SKILL.md       # Review-only OLD/NEW SQL standards sign-off
-│       │   ├── phx-debugger/
-│       │   │   └── SKILL.md       # Azure DevOps bug fixing, end to end
-│       │   └── hrm-notification/
-│       │       └── SKILL.md       # Job Scheduler email notifications
+│       │   └── phx-business-context/
+│       │       └── SKILL.md       # PeoplesHR product knowledge from WeKnora (BA)
 │       └── README.md
 ├── .github/
 │   └── workflows/
@@ -39,7 +48,7 @@ and the plugins it distributes (`plugins/`).
 
 ## What's in `org-standards`
 
-The plugin ships four skills of its own, plus one MCP server.
+The plugin ships five skills of its own, plus two MCP servers.
 
 | Source | Skill(s) / MCP server | Notes |
 | --- | --- | --- |
@@ -47,7 +56,9 @@ The plugin ships four skills of its own, plus one MCP server.
 | **This repo (own skill)** | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
 | **This repo (own skill)** | `phx-debugger` | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA, status change. Needs the `superpowers` plugin and a per-developer Azure DevOps MCP server. |
 | **This repo (own skill)** | `hrm-notification` | Builds a module email notification on the `HRM-JS45-SERVICE` Job Scheduler — four views, claim column, `HS_HR_JS_*` config rows, HTML template. A notification is **data, not code**. |
+| **This repo (own skill)** | `phx-product-context` | Grounds any answer about PeoplesHR module behaviour in the product documentation held in WeKnora, and cites the documents used. Searches `Product Development` deep and `PeoplesHR Academy` shallow, and answers technically. Needs `WEKNORA_MCP_TOKEN`. |
 | **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a **public** .NET repo, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use (the repo must stay public — the download is unauthenticated). |
+| **Remote server on the WeKnora VM** | `weknora` (MCP server) | Read-only retrieval from the `Product Development` and `PeoplesHR Academy` knowledge bases at `https://weknora.phrsandbox.dev/mcp`. A `type: "http"` server — nothing is downloaded or run locally. Read-only is enforced by a `retrieve`-only API key on the server, not by the advertised tool list. |
 
 > **Before `phx-dbexplorer` will work**, you must set `PHX_DB_TYPE`,
 > `PHX_DB_CONNECTION_STRING`, and optionally `PHX_DB_SCHEMA_FILTER` in your own
@@ -59,6 +70,15 @@ The plugin ships four skills of its own, plus one MCP server.
 > or changing these — an already-running session won't pick up the new
 > values. See the [usage guide's Plugin catalog](docs/USAGE.md#plugin-catalog)
 > for the full variable table.
+
+> **Before `weknora` will work**, you must set `WEKNORA_MCP_TOKEN` in your own
+> environment — one token shared by the whole team, handed out through your
+> credential channel and **never committed to this public repo**. Set it and
+> **then** restart Claude Code: Windows reads user environment variables at
+> process start, so a session that was already running reports a
+> missing-variable warning for `weknora` even though the token is stored
+> correctly. See
+> [`INSTALL.md`](plugins/org-standards/skills/phx-product-context/INSTALL.md).
 
 We do not bundle third-party *plugins* as `dependencies` — Claude Code only auto-resolves a
 cross-marketplace dependency if the user has already added that dependency's marketplace,
@@ -86,6 +106,7 @@ Each skill is namespaced under the plugin, so invoke it with:
 /org-standards:phx-sql-standards-review
 /org-standards:phx-debugger <bug-id>
 /org-standards:hrm-notification
+/org-standards:phx-product-context
 ```
 
 Claude also loads a skill automatically when its `description` matches the
@@ -111,11 +132,34 @@ add it to that project's `.claude/settings.json`:
 }
 ```
 
+## `ba-kit` — the Business Analyst plugin
+
+Business Analysts install `ba-kit` instead of `org-standards`:
+
+```shell
+claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
+claude plugin install ba-kit@phr-foundry
+```
+
+It ships one skill, `phx-business-context`, and the same `weknora` MCP server.
+The skill answers PeoplesHR questions in business terms — what the user sees, the
+process, the rules and the configuration — leading with the `PeoplesHR Academy`
+knowledge base and using `Product Development` for the intent behind it. It also
+needs `WEKNORA_MCP_TOKEN`. See
+[`plugins/ba-kit/README.md`](plugins/ba-kit/README.md).
+
+> ⚠️ **Install `ba-kit` or `org-standards`, never both.**
+> `phx-business-context` and `phx-product-context` search the same two knowledge
+> bases in opposite orders and answer in different voices. With both present they
+> compete on question wording and misroute. Anyone genuinely doing both jobs takes
+> `org-standards`, whose developer skill keeps the business rationale as a
+> secondary.
+
 ## Versioning: manual semver in `plugin.json`
 
-Each plugin declares an explicit `version` in its `plugin.json` (currently
-`2.10.0`). Claude Code resolves a plugin's version from the first of these that
-is set:
+Each plugin declares an explicit `version` in its `plugin.json` (`org-standards`
+is at `2.11.0`, `ba-kit` at `1.0.0`). Claude Code resolves a plugin's version from
+the first of these that is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**
 2. `version` in the plugin's marketplace entry
