@@ -3,14 +3,14 @@
 `phx-debugger` fixes an Azure DevOps bug end to end from its bug ID, with root cause investigation
 driven by the **Superpowers `systematic-debugging`** skill.
 
-**You do not install the skill itself.** It ships inside the `org-standards` plugin — if you have the
-plugin, you already have the skill. This page covers only the two things `org-standards` deliberately
+**You do not install the skill itself.** It ships inside the `dev-kit` plugin — if you have the
+plugin, you already have the skill. This page covers only the two things `dev-kit` deliberately
 does *not* ship, because both are per-developer: the Superpowers plugin, and your Azure DevOps MCP
 server.
 
 Takes about five minutes, once.
 
-> Installing the `org-standards` plugin is covered in [`docs/USAGE.md`](../../../../docs/USAGE.md).
+> Installing the `dev-kit` plugin is covered in [`docs/USAGE.md`](../../../../docs/USAGE.md).
 > Do **not** also copy this folder into `%USERPROFILE%\.claude\skills\` — that registers the same
 > skill twice and the two copies drift apart.
 
@@ -22,7 +22,7 @@ Takes about five minutes, once.
 |---|---|---|
 | **Claude Code** | `npm install -g @anthropic-ai/claude-code` | needs Node.js |
 | **Signed in** | `claude login` (or `/login` in a session) | opens a browser |
-| **`org-standards` plugin** | `claude plugin install org-standards@phr-foundry` | ships this skill |
+| **`dev-kit` plugin** | `claude plugin install dev-kit@phr-foundry` | ships this skill |
 | **Superpowers plugin** | `/plugin install superpowers@claude-plugins-official` | **required** — see step 1 |
 | **Azure DevOps MCP server** | `@azure-devops/mcp` | **required** — see step 2. The *only* way this skill talks to ADO |
 | **Azure CLI** | `winget install --id Microsoft.AzureCLI -e` | how the MCP server authenticates — `az login` |
@@ -59,7 +59,7 @@ its comments, its attachments, code search, branches, the RCA, the status change
 server. There is no CLI path, no REST path and no PAT path behind it. Without the server the skill
 prints what is missing and stops.
 
-`org-standards` does not ship it, because the organization name and your sign-in are yours. Add it to
+`dev-kit` does not ship it, because the organization name and your sign-in are yours. Add it to
 your MCP config — either `.mcp.json` at the root of the repo you work in, or your user config so it
 is available everywhere:
 
@@ -96,7 +96,7 @@ read a repository in the browser, the skill cannot read it either.
 there is no code path to pass:
 
 ```
-/org-standards:phx-debugger 141827
+/dev-kit:phx-debugger 141827
 ```
 
 Or just describe it — *"fix ADO bug 141827"*. Either way the message must carry the **bug ID**; that
@@ -214,7 +214,7 @@ changes sit in your working tree for you to review.
 | It refuses to use `az devops` even when asked | Working as designed. See *Three things it will not do* |
 | `Insufficient information` on a bug you think is fine | It asks you before it comments — read the questions, and if you know the answers just reply and it carries on. Only say "comment on the ticket" when the reporter is the one who has to answer — the comment @mentions them, so they get notified |
 | A state change is rejected | Your process template does not allow that transition from the current state. It will say so and ask |
-| Skill not found | The `org-standards` plugin is not installed, or Claude Code has not been restarted since it was. `claude plugin list` should show it |
+| Skill not found | The `dev-kit` plugin is not installed, or Claude Code has not been restarted since it was. `claude plugin list` should show it |
 | "Needs the Superpowers plugin" | Step 1 not done — run `/plugin install superpowers@claude-plugins-official` and **restart** |
 | `Under Investigation` / `Dev In Progress` not in the state list | Your process template names them differently. It will not force the nearest match — it lists the states your Bug type does have and asks which you want |
 | "Cannot use that bug ID" | What you passed is not a positive integer. It will not guess at a repair — give it the plain ID or the `_workitems/edit/<id>` URL |

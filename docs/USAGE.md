@@ -21,13 +21,19 @@ required.
 
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
+claude plugin install dev-kit@phr-foundry
 claude plugin install org-standards@phr-foundry
 ```
+
+`dev-kit` carries the build skills (deployment scripts, notifications, the ADO bug
+fixer); `org-standards` carries the standards review, the product-knowledge skill
+and both MCP servers. They are independent — take one or both. Most developers
+want both.
 
 The same commands work as slash commands inside a Claude Code session
 (`/plugin marketplace add ...`, `/plugin install ...`).
 
-**Business Analysts install `ba-kit` instead**, not as well:
+**Business Analysts install `ba-kit` instead of `org-standards`**, not as well:
 
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
@@ -41,6 +47,9 @@ claude plugin install ba-kit@phr-foundry
 > Developers take `org-standards`; BAs take `ba-kit`; anyone genuinely doing both
 > jobs takes `org-standards`, whose skill keeps the business rationale as a
 > secondary.
+>
+> **`dev-kit` is exempt** — it ships no product-knowledge skill, so it sits happily
+> beside either one. A BA who also writes deployment SQL takes `ba-kit` + `dev-kit`.
 
 **If the first command hangs or fails on authentication**, your machine has no
 cached GitHub credentials. Use the URL with the account prefix so Git knows
@@ -53,10 +62,10 @@ claude plugin marketplace add https://hsenidBiz@github.com/hsenidBiz/phr-foundry
 ### Make it automatic for a whole project
 
 Add this to the project's `.claude/settings.json` and commit it. Anyone who
-trusts the project gets the marketplace registered and `org-standards` enabled
-automatically. `enabledPlugins` only enables an **already-installed** plugin,
-though — it does not install it — so the first person on the project still
-has to run `claude plugin install org-standards@phr-foundry` once:
+trusts the project gets the marketplace registered and both developer plugins
+enabled automatically. `enabledPlugins` only enables an **already-installed**
+plugin, though — it does not install it — so the first person on the project still
+has to run the two `claude plugin install` commands once:
 
 ```json
 {
@@ -69,6 +78,7 @@ has to run `claude plugin install org-standards@phr-foundry` once:
     }
   },
   "enabledPlugins": {
+    "dev-kit@phr-foundry": true,
     "org-standards@phr-foundry": true
   }
 }
@@ -85,6 +95,7 @@ claude plugin marketplace list      # marketplaces Claude Code knows about
 
 ```shell
 claude plugin marketplace update phr-foundry
+claude plugin update dev-kit
 claude plugin update org-standards
 ```
 
@@ -95,6 +106,7 @@ change and don't see it, ask the maintainer whether the semver was bumped.
 ## 4. Uninstall
 
 ```shell
+claude plugin uninstall dev-kit
 claude plugin uninstall org-standards
 ```
 
@@ -102,20 +114,26 @@ claude plugin uninstall org-standards
 
 ## Plugin catalog
 
-### `org-standards` — PeoplesHR organization standards
+Each plugin serves one audience: `dev-kit` is for developers, `ba-kit` is for Business
+Analysts, and `org-standards` holds what everyone can use. Install the one that matches
+your role — plus `org-standards`, which is for all roles.
+
+### `dev-kit` — PeoplesHR developer build tooling
 
 | Skill | Use it for |
 | --- | --- |
 | `hrm-deployment-script` | Creating, converting, and PR-reviewing re-runnable **HRM-DB MSSQL deployment scripts** and their `dep.xml` registration. |
-| `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the **OLD hSenid HRM** (.NET Framework) or **NEW PeoplesHR PHR-X** (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
-| `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 | `hrm-notification` | Building an **email notification for any module** on the `HRM-JS45-SERVICE` Job Scheduler — the four views, the claim column, the `HS_HR_JS_*` configuration rows and the HTML template. Needs access to the client database. |
-| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
+| `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
-| `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
-| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
+| *(none)* | `dev-kit` ships skills only. `hrm-notification` and `hrm-deployment-script` want a database — install `org-standards` too and use its [`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing). `phx-debugger` needs your own Azure DevOps MCP server, which no `phr-foundry` plugin has ever shipped. |
+
+> **These three moved here from `org-standards` in its `3.0.0` release.** The skills
+> themselves are unchanged; only the slash-command prefix changed, from
+> `/org-standards:` to `/dev-kit:`. If you had `org-standards` before, run
+> `claude plugin install dev-kit@phr-foundry` to get them back.
 
 #### What `hrm-deployment-script` does
 
@@ -134,7 +152,7 @@ applied without changing your SQL, it stops and asks you for corrected source.
 Explicitly:
 
 ```
-/org-standards:hrm-deployment-script
+/dev-kit:hrm-deployment-script
 ```
 
 Or just describe the work — Claude loads the skill on its own when you're
@@ -162,7 +180,7 @@ extra confirmation step after that.
 #### Copy-paste template
 
 ````text
-Use /org-standards:hrm-deployment-script to create an HRM-DB deployment script.
+Use /dev-kit:hrm-deployment-script to create an HRM-DB deployment script.
 
 User name:
 Feature ID:
@@ -195,49 +213,63 @@ you, never written into the deployment files), and any risks or blockers.
 
 ---
 
-#### What `phx-sql-standards-review` does
-
-Review-only sign-off on a T-SQL script — it never edits your SQL, only reports
-against the standard. There are two independent standards, one per system:
-the **OLD hSenid HRM** (.NET Framework) standard covers naming, data
-types/deployment idempotency, and performance only; the **NEW PeoplesHR
-PHR-X** (.NET Core) standard covers all of that plus formatting, query
-structure, aggregation, transactions, centralized exception logging,
-security, comments/metadata, stored-procedure conventions, and testing
-sign-off.
-
-It identifies which system your script targets before reviewing anything —
-from an explicit statement, file/header metadata, or naming style (OLD is
-`UPPERCASE` with an `HS_` prefix; NEW is lowercase `snake_case` with no
-prefix) — and asks rather than guesses if the signal is ambiguous. Every
-finding in the report is prefixed with the system name (e.g. "NEW ERR-03",
-"OLD DEP-06"), because both standards reuse the same bare rule IDs for
-unrelated rules.
-
-#### How to invoke it
-
-Explicitly:
+#### What `hrm-notification` does
 
 ```
-/org-standards:phx-sql-standards-review
+/dev-kit:hrm-notification
 ```
 
-Or describe the work — e.g. *"review this stored proc for PR sign-off"* —
-and Claude loads the skill on its own when T-SQL needs review.
+Plain language works too — *"send the approver an email when a claim is
+submitted"*, *"remind staff whose probation expires next week"*. Anything that
+asks for an alert, notification, reminder or email out of a module loads it.
+
+**A PeoplesHR notification is data, not code.** The web application does not send
+mail; `HRM-JS45-SERVICE` polls the database on a frequency and sends. So the
+deliverable is four views, one claim column, two configuration rows and one HTML
+file — and the skill will refuse to add a mail call to a C# service class, which
+would not survive a module upgrade anyway.
+
+**It checks whether the job already exists first**, before writing anything. The
+base product ships notifications for many modules and a client may have added
+more, so it queries `HS_HR_JS_TYPE` / `HS_HR_JS_MAIL_CONFIG` and reports which of
+three situations you are in: an existing job already does this (configure it), an
+existing job fires on a different event (build a second parallel set of views), or
+nothing exists (build from scratch). It will **not** narrow an existing base
+view's `WHERE` clause to fit your trigger — those views are shared by every
+client on the schema.
 
 #### What it needs from you
 
-The **complete SQL script** to review. If the target system isn't obvious
-from an explicit statement, file path, or naming style, it asks which system
-before reviewing rather than guessing.
+The source table and its primary key, the exact column values that mean "send
+now", who receives the mail (requester, approver from `HS_HR_WF_MAIN`, HR, a fixed
+address), the merge fields the mail must show, and which repo owns the module. If
+the trigger or the recipient is ambiguous it asks; everything else it decides.
+
+It also needs a database to inspect, for both the discovery queries and the
+verification. The intended way to give it one is the
+[`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing) MCP server — which
+lives in `org-standards`, not here, so install that plugin alongside `dev-kit`.
 
 #### What you get back
 
-A report with: the detected/confirmed system and its basis, a verdict
-(`BLOCKED (N must-fix items)` / `PASS (no MUST violations)` / `PASS WITH
-SHOULD-LEVEL NOTES`), a table of MUST violations (rule ID, offending
-line/snippet, problem, fix), SHOULD-level notes for undocumented deviations,
-and any MAY-level judgment notes worth flagging.
+The guarded claim-column `ALTER`, the four views (`_PEN`, `_ADD`, `_DAT`, `_UPD`)
+sharing one byte-identical `WHERE` clause, the `HS_PR_PARAMETERS` sender row, the
+`HS_HR_JS_TYPE` and `HS_HR_JS_MAIL_CONFIG` rows, an HTML template for the module
+repo's `alerts/` folder, and the verification queries — including the mechanical
+check that the four views have not drifted apart, which is the failure mode that
+silently mails the same row on every pass, forever.
+
+**Two things it cannot do for you**, and says so in the deliverable:
+
+1. **Deploy the HTML template to the scheduler host's alert directory.** If the
+   file is absent the job sends an empty body **and still stamps the claim
+   column**, so the row cannot be retried without clearing the claim by hand.
+2. **Confirm `HRM-JS45-SERVICE` is actually running against that database.** If it
+   is not, rows accumulate unclaimed and nothing is sent, with no error anywhere.
+
+> If you previously hand-copied this skill into your own `~/.claude/skills/`,
+> delete that copy once the plugin ships it — otherwise both load and your skill
+> list shows two near-identical entries.
 
 ---
 
@@ -246,7 +278,7 @@ and any MAY-level judgment notes worth flagging.
 Open Claude Code in the repository you are debugging, then give it a bug ID:
 
 ```
-/org-standards:phx-debugger 141827
+/dev-kit:phx-debugger 141827
 ```
 
 Plain language works too — *"fix ADO bug 141827"*. Either way the message must
@@ -305,7 +337,7 @@ nothing and touched nothing. The two you install once:
 
 1. The **`superpowers` plugin**:
    `/plugin install superpowers@claude-plugins-official`, then restart.
-2. An **Azure DevOps MCP server**, which `org-standards` deliberately does *not*
+2. An **Azure DevOps MCP server**, which `dev-kit` deliberately does *not*
    ship — the org name and your sign-in are per-developer. Add it yourself:
 
    ```json
@@ -325,67 +357,71 @@ nothing and touched nothing. The two you install once:
 `az devops`, REST or a personal access token as a fallback — not even if you ask
 it to. Calls run as *your* identity, so your existing ADO permissions apply
 unchanged. Full prerequisites and troubleshooting:
-[`plugins/org-standards/skills/phx-debugger/INSTALL.md`](../plugins/org-standards/skills/phx-debugger/INSTALL.md).
-You do not install the skill separately — it arrives with `org-standards`.
+[`plugins/dev-kit/skills/phx-debugger/INSTALL.md`](../plugins/dev-kit/skills/phx-debugger/INSTALL.md).
+You do not install the skill separately — it arrives with `dev-kit`.
 
 ---
 
-#### What `hrm-notification` does
+### `org-standards` — PeoplesHR organization standards
+
+| Skill | Use it for |
+| --- | --- |
+| `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the **OLD hSenid HRM** (.NET Framework) or **NEW PeoplesHR PHR-X** (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
+| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
+
+| MCP server | Use it for |
+| --- | --- |
+| `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
+| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
+
+> Looking for `hrm-deployment-script`, `hrm-notification` or `phx-debugger`? They
+> moved to [`dev-kit`](#dev-kit--peopleshr-developer-build-tooling) in `3.0.0`.
+> `phx-dbexplorer` stayed here, and those skills still use it — which is why most
+> developers install both plugins.
+
+#### What `phx-sql-standards-review` does
+
+Review-only sign-off on a T-SQL script — it never edits your SQL, only reports
+against the standard. There are two independent standards, one per system:
+the **OLD hSenid HRM** (.NET Framework) standard covers naming, data
+types/deployment idempotency, and performance only; the **NEW PeoplesHR
+PHR-X** (.NET Core) standard covers all of that plus formatting, query
+structure, aggregation, transactions, centralized exception logging,
+security, comments/metadata, stored-procedure conventions, and testing
+sign-off.
+
+It identifies which system your script targets before reviewing anything —
+from an explicit statement, file/header metadata, or naming style (OLD is
+`UPPERCASE` with an `HS_` prefix; NEW is lowercase `snake_case` with no
+prefix) — and asks rather than guesses if the signal is ambiguous. Every
+finding in the report is prefixed with the system name (e.g. "NEW ERR-03",
+"OLD DEP-06"), because both standards reuse the same bare rule IDs for
+unrelated rules.
+
+#### How to invoke it
+
+Explicitly:
 
 ```
-/org-standards:hrm-notification
+/org-standards:phx-sql-standards-review
 ```
 
-Plain language works too — *"send the approver an email when a claim is
-submitted"*, *"remind staff whose probation expires next week"*. Anything that
-asks for an alert, notification, reminder or email out of a module loads it.
-
-**A PeoplesHR notification is data, not code.** The web application does not send
-mail; `HRM-JS45-SERVICE` polls the database on a frequency and sends. So the
-deliverable is four views, one claim column, two configuration rows and one HTML
-file — and the skill will refuse to add a mail call to a C# service class, which
-would not survive a module upgrade anyway.
-
-**It checks whether the job already exists first**, before writing anything. The
-base product ships notifications for many modules and a client may have added
-more, so it queries `HS_HR_JS_TYPE` / `HS_HR_JS_MAIL_CONFIG` and reports which of
-three situations you are in: an existing job already does this (configure it), an
-existing job fires on a different event (build a second parallel set of views), or
-nothing exists (build from scratch). It will **not** narrow an existing base
-view's `WHERE` clause to fit your trigger — those views are shared by every
-client on the schema.
+Or describe the work — e.g. *"review this stored proc for PR sign-off"* —
+and Claude loads the skill on its own when T-SQL needs review.
 
 #### What it needs from you
 
-The source table and its primary key, the exact column values that mean "send
-now", who receives the mail (requester, approver from `HS_HR_WF_MAIN`, HR, a fixed
-address), the merge fields the mail must show, and which repo owns the module. If
-the trigger or the recipient is ambiguous it asks; everything else it decides.
-
-It also needs a database to inspect, for both the discovery queries and the
-verification. The `phx-dbexplorer` MCP server below, which ships in this same
-plugin, is the intended way to give it one.
+The **complete SQL script** to review. If the target system isn't obvious
+from an explicit statement, file path, or naming style, it asks which system
+before reviewing rather than guessing.
 
 #### What you get back
 
-The guarded claim-column `ALTER`, the four views (`_PEN`, `_ADD`, `_DAT`, `_UPD`)
-sharing one byte-identical `WHERE` clause, the `HS_PR_PARAMETERS` sender row, the
-`HS_HR_JS_TYPE` and `HS_HR_JS_MAIL_CONFIG` rows, an HTML template for the module
-repo's `alerts/` folder, and the verification queries — including the mechanical
-check that the four views have not drifted apart, which is the failure mode that
-silently mails the same row on every pass, forever.
-
-**Two things it cannot do for you**, and says so in the deliverable:
-
-1. **Deploy the HTML template to the scheduler host's alert directory.** If the
-   file is absent the job sends an empty body **and still stamps the claim
-   column**, so the row cannot be retried without clearing the claim by hand.
-2. **Confirm `HRM-JS45-SERVICE` is actually running against that database.** If it
-   is not, rows accumulate unclaimed and nothing is sent, with no error anywhere.
-
-> If you previously hand-copied this skill into your own `~/.claude/skills/`,
-> delete that copy once the plugin ships it — otherwise both load and your skill
-> list shows two near-identical entries.
+A report with: the detected/confirmed system and its basis, a verdict
+(`BLOCKED (N must-fix items)` / `PASS (no MUST violations)` / `PASS WITH
+SHOULD-LEVEL NOTES`), a table of MUST violations (rule ID, offending
+line/snippet, problem, fix), SHOULD-level notes for undocumented deviations,
+and any MAY-level judgment notes worth flagging.
 
 ---
 
@@ -565,14 +601,16 @@ The same `WEKNORA_MCP_TOKEN` described under
 | --- | --- |
 | `claude plugin marketplace add` hangs or fails | No cached GitHub credentials — use the `https://hsenidBiz@github.com/...` form, or sign in via Git Credential Manager first. |
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
+| `/org-standards:hrm-deployment-script`, `:hrm-notification` or `:phx-debugger` not found | Those three moved to `dev-kit` in `org-standards` `3.0.0`. Run `claude plugin install dev-kit@phr-foundry` and use the `/dev-kit:` prefix. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
-| `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback. |
+| `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback, and `dev-kit` ships no MCP servers. |
 | `phx-debugger` stops saying it needs Superpowers | Run `/plugin install superpowers@claude-plugins-official` and restart. |
 | A notification mails the same row on every scheduler pass | The four views' `WHERE` clauses have drifted, so the `_UPD` view never returns the row and the claim column is never stamped. Run the predicate check in `hrm-notification`'s verification step. |
 | A notification arrives with empty merge fields | Same cause — the row is in `_PEN` but not in `_DAT`. Compare the four `WHERE` clauses; they must be byte-identical. |
 | A notification arrives with `@TOKEN` printed literally | That token has no matching column in the `_DAT` view. An unmatched token is not an error — it renders as written. |
 | Rows sit unclaimed and nothing is ever sent, with no error | Either the HTML template was never deployed to the scheduler host's alert directory, or `HRM-JS45-SERVICE` is not running against that database. Neither is visible from SQL. |
+| `hrm-notification` or `hrm-deployment-script` has no database to inspect | `dev-kit` declares no MCP servers. Install `org-standards` too — it declares `phx-dbexplorer` — and set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING`. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `claude mcp list` warns that `WEKNORA_MCP_TOKEN` is missing | Either it is genuinely unset, or this session started before you set it. Check `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the registry, not `$env:` — then fully restart Claude Code. |

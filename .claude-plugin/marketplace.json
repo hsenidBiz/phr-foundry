@@ -9,7 +9,12 @@
     {
       "name": "org-standards",
       "source": "./plugins/org-standards",
-      "description": "PeoplesHR organization standards. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, the phx-dbexplorer MCP server for browsing a database's schema, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases."
+      "description": "PeoplesHR organization standards. Ships the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, the phx-dbexplorer MCP server for browsing a database's schema, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hands-on build skills now live in the dev-kit plugin."
+    },
+    {
+      "name": "dev-kit",
+      "source": "./plugins/dev-kit",
+      "description": "PeoplesHR developer build tooling. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the hrm-notification skill for building a Job Scheduler email notification for any module, and the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID. No MCP servers of its own; safe to install alongside either org-standards or ba-kit."
     },
     {
       "name": "ba-kit",
