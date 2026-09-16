@@ -35,7 +35,7 @@ requires an Azure DevOps MCP server, but none of those are declared here:
 
 | What a skill wants | Where it comes from |
 | --- | --- |
-| Schema browsing for `hrm-notification`'s discovery and verification queries, and for `hrm-deployment-script` | The `phx-dbexplorer` MCP server, declared by [`org-standards`](../org-standards/README.md#mcp-servers) — a leftover placement, since schema browsing is developer-only. Install that plugin too if you want it, or point Claude at your database some other way. |
+| Schema browsing for `hrm-notification`'s discovery and verification queries, and for `hrm-deployment-script` | The `phx-dbexplorer` MCP server, declared by [`dba-kit`](../dba-kit/README.md#mcp-servers). Install that plugin too if you want it, or point Claude at your database some other way. |
 | Azure DevOps access for `phx-debugger` | Your **own** per-developer ADO MCP server, plus the `superpowers` plugin. Neither has ever shipped with a `phr-foundry` plugin — the org name and your sign-in are yours. See [`skills/phx-debugger/INSTALL.md`](skills/phx-debugger/INSTALL.md). |
 
 `hrm-notification` will still run without a database, but it cannot then check
@@ -48,11 +48,11 @@ claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install dev-kit@phr-foundry
 ```
 
-Safe to install alongside **either** `org-standards` or `ba-kit` — `dev-kit`
+Safe to install alongside `org-standards`, `dba-kit` or `ba-kit` — `dev-kit`
 ships no product-knowledge skill, so it has nothing to misroute against
 `phx-product-context` or `phx-business-context`. (Those two still must not be
-installed together with each other.) Most developers will want
-`dev-kit` **and** `org-standards`.
+installed together with each other.) Most developers will want `dev-kit`,
+`org-standards` and `dba-kit`.
 
 ## Notes
 

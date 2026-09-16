@@ -40,28 +40,20 @@ One repo holds both the catalog and the plugins.
     `hrm-` prefix rule. The whole folder ships together; `SKILL.md` alone is not the skill.
   - These four moved here from `org-standards` in its `3.0.0` release. The skills are
     unchanged; only the invocation prefix changed (`/org-standards:` → `/dev-kit:`).
-  - `hrm-notification` and `hrm-deployment-script` want a database, and `phx-dbexplorer`
-    stayed behind in `org-standards` — so a developer currently installs both plugins to
-    get schema browsing. Under the audience rule below `phx-dbexplorer` is
-    developer-only and belongs **here**; it is a grandfathered exception, not the
-    intended shape. Don't move it as a side effect of unrelated work.
-  - Safe to install alongside **either** `org-standards` or `ba-kit` — it ships no
+  - `hrm-notification` and `hrm-deployment-script` want a database; `phx-dbexplorer`
+    now lives in `dba-kit`, so a developer installs `dev-kit` + `dba-kit` to get
+    schema browsing.
+  - Safe to install alongside `org-standards`, `dba-kit` or `ba-kit` — it ships no
     product-knowledge skill, so it has nothing to misroute against.
-- `plugins/org-standards/` — the developer standards + product-knowledge plugin
-  - `.claude-plugin/plugin.json` — manifest. Also declares the plugin's two
-    MCP servers (see below).
+- `plugins/dba-kit/` — the DBA / database-tooling plugin
+  - `.claude-plugin/plugin.json` — manifest. Also declares the `phx-dbexplorer`
+    MCP server (see below).
   - `skills/phx-sql-standards-review/` — its own skill: review-only (never edits SQL) against
     either the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL
     standard, auto-detecting which system a script targets. Supporting files:
     `reference/OLD_SQL_Standards.md` and `reference/NEW_SQL_Standards.md`, the full source
     standards documents read by the skill during review. The whole folder ships together;
     `SKILL.md` alone is not the skill.
-  - `skills/phx-product-context/SKILL.md` — its own skill: before answering anything about
-    how a PeoplesHR module behaves, retrieve the product documentation from WeKnora over
-    the `weknora` MCP server (below) and cite it. Searches `Product Development` deep and
-    `PeoplesHR Academy` shallow, and answers technically. Supporting file: `INSTALL.md`
-    (the per-developer `WEKNORA_MCP_TOKEN`, which the plugin deliberately does not ship).
-    The whole folder ships together; `SKILL.md` alone is not the skill.
   - MCP server `phx-dbexplorer` — schema-browsing tool for SQL Server/Postgres.
     Source lives in the separate public repo
     `https://github.com/hsenidBiz/phx-dbexplorer` (a .NET project, **not**
@@ -73,6 +65,19 @@ One repo holds both the catalog and the plugins.
     `PHX_DB_CONNECTION_STRING` (and optionally `PHX_DB_SCHEMA_FILTER`) in their
     own shell environment before launching Claude Code — these are per-developer
     secrets and must never be committed to either repo.
+  - Both moved here from `org-standards` in its `4.0.0` release. The skill is
+    unchanged; only the invocation prefix changed (`/org-standards:` → `/dba-kit:`),
+    and `phx-dbexplorer` re-registers under `dba-kit`.
+  - Ships no product-knowledge skill, so it is safe alongside any other plugin here.
+- `plugins/org-standards/` — the product-knowledge plugin
+  - `.claude-plugin/plugin.json` — manifest. Also declares the `weknora` MCP server
+    (see below).
+  - `skills/phx-product-context/SKILL.md` — its own skill: before answering anything about
+    how a PeoplesHR module behaves, retrieve the product documentation from WeKnora over
+    the `weknora` MCP server (below) and cite it. Searches `Product Development` deep and
+    `PeoplesHR Academy` shallow, and answers technically. Supporting file: `INSTALL.md`
+    (the per-developer `WEKNORA_MCP_TOKEN`, which the plugin deliberately does not ship).
+    The whole folder ships together; `SKILL.md` alone is not the skill.
   - MCP server `weknora` — read-only retrieval from the PeoplesHR WeKnora knowledge
     bases (`Product Development`, `PeoplesHR Academy`). Not vendored and not run
     locally: it is a `type: "http"` server hosted on the WeKnora VM at
@@ -92,8 +97,8 @@ One repo holds both the catalog and the plugins.
     `phx-business-context` and `phx-product-context` compete on question wording and
     misroute. A BA takes `ba-kit`; a developer takes `org-standards`; anyone doing both
     jobs takes the developer skill, which keeps the business rationale as a secondary.
-    This applies to that pair only — `dev-kit` ships no product-knowledge skill and is
-    safe alongside either.
+    This applies to that pair only — `dev-kit` and `dba-kit` ship no product-knowledge
+    skill and are safe alongside either.
 - `.github/workflows/validate.yml` — runs `claude plugin validate .` on every PR into `main`
 - `docs/` — Azure repo template dir, holds `docs/USAGE.md` (real content — see rule below).
   The other empty Azure template dirs (`deps/`, `scripts/`, `src/`) were removed since they
@@ -105,6 +110,8 @@ One repo holds both the catalog and the plugins.
   before adding anything:
   - `dev-kit` — **developers only.** Skills and MCP servers no other role would ever
     invoke.
+  - `dba-kit` — **DBAs only.** Same test, for database work: SQL standards review and
+    schema browsing.
   - `ba-kit` — **Business Analysts only.** Same test, for BAs.
   - `org-standards` — **everyone.** Only things usable by *every* role regardless of
     job. If one role would never touch it, it does not belong here.
@@ -120,16 +127,18 @@ One repo holds both the catalog and the plugins.
   it declares it. Identical duplicate declarations are the intended cost of keeping
   audiences clean; they resolve to one server at run time.
 
-  **Known exceptions, deliberately grandfathered — do not "fix" them unprompted:**
-  the repo predates this rule and three things are still misplaced under it.
-  `phx-dbexplorer` is developer-only but is declared by `org-standards`;
-  `phx-sql-standards-review` and `phx-product-context` are developer-only but ship in
-  `org-standards`. Moving them is a breaking change for installed users (new slash-command
-  prefixes, a `phx-dbexplorer` re-registration), so it happens only when someone asks
-  for it explicitly. Until then, treat the rule as governing **additions**, and don't
-  write docs that present the current placement as the intended design.
+  **Known exception, deliberately grandfathered — do not "fix" it unprompted:**
+  `phx-product-context` is developer-only but ships in `org-standards`. Moving it is a
+  breaking change for installed users (a new slash-command prefix), so it happens only
+  when someone asks for it explicitly. Until then, treat the rule as governing
+  **additions**, and don't write docs that present the current placement as the
+  intended design.
+
+  `phx-sql-standards-review` and `phx-dbexplorer` were two further exceptions until
+  `org-standards` `4.0.0`, when they were realigned into the new `dba-kit` plugin at
+  the maintainer's explicit request.
 - **Version lives in `plugin.json` only** (`dev-kit` is at `1.0.0`, `org-standards`
-  at `3.0.0`, `ba-kit` at `1.0.0`). Bump the semver on every release — users only receive updates when it
+  at `4.0.0`, `ba-kit` at `1.0.0`, `dba-kit` at `1.0.0`). Bump the semver on every release — users only receive updates when it
   changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
 - **Skill names must start with `hrm-` or `phx-` and be kebab-case** — non-negotiable.
@@ -144,11 +153,11 @@ One repo holds both the catalog and the plugins.
   - `docs/USAGE.md` — add/update/remove the skill's row in the Plugin catalog skill table,
     and its own `#### What \`<skill>\` does` walkthrough (invocation, inputs, output).
   - `README.md` (repo root) — the repository-layout tree, the "What's in `dev-kit`" /
-    "What's in `org-standards`" skills/MCP-server tables, and any invocation example
-    listing skills by name.
+    "What's in `dba-kit`" / "What's in `org-standards`" skills/MCP-server tables, and
+    any invocation example listing skills by name.
   - the owning plugin's `README.md` (`plugins/dev-kit/README.md`,
-    `plugins/org-standards/README.md` or `plugins/ba-kit/README.md`) — its Skills table
-    and invocation-examples sentence.
+    `plugins/dba-kit/README.md`, `plugins/org-standards/README.md` or
+    `plugins/ba-kit/README.md`) — its Skills table and invocation-examples sentence.
   - `CLAUDE.md` (this file) — the `## Layout` bullet list under the owning plugin.
   - Any `version` mentioned in prose (e.g. "currently `X.Y.Z`") in `README.md`, this
     file, and the plugin's own `README.md` must match the new `plugin.json` version — these are
@@ -160,8 +169,8 @@ One repo holds both the catalog and the plugins.
   plugin's **audience** in its `description` and in the first line of its `README.md` —
   a plugin whose audience you cannot name in one word is the wrong boundary.
 - Skills, plus the MCP servers declared in each plugin's `plugin.json` — no agents or
-  hooks. `org-standards` declares two (`phx-dbexplorer` and `weknora`); `ba-kit`
-  declares `weknora`; `dev-kit` declares none yet. Don't vendor an MCP server's source into this repo:
+  hooks. `org-standards` declares `weknora`; `ba-kit` declares `weknora`; `dba-kit`
+  declares `phx-dbexplorer`; `dev-kit` declares none yet. Don't vendor an MCP server's source into this repo:
   `phx-dbexplorer` stays in its own repo and is fetched at run time via
   `npx github:...`, and `weknora` is a remote HTTP server on the WeKnora VM (see
   Layout above).
