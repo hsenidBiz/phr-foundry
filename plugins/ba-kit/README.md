@@ -31,6 +31,11 @@ searches the same two knowledge bases in the opposite order and answers
 technically. The two compete on question wording and misroute if both are
 present. Install one or the other — never both.
 
+`dev-kit` is a different matter: it ships only build skills (deployment scripts,
+notifications, the ADO bug fixer) and no product-knowledge skill, so it is safe
+alongside `ba-kit` if you also write SQL. See
+[`plugins/dev-kit/README.md`](../dev-kit/README.md).
+
 ## Notes
 
 - **Versioned by semver** in `plugin.json` (currently `1.0.0`); bump it on each

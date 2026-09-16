@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "org-standards",
-  "version": "2.12.0",
-  "description": "PeoplesHR organization standards for Claude Code. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, the hrm-notification skill for building a Job Scheduler email notification for any module, the hrm-configuration-document skill for writing the house Configuration Document (.md, .docx, PDF) for a finished CR, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, the phx-dbexplorer MCP server for browsing a database's schema, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases.",
+  "version": "3.0.0",
+  "description": "PeoplesHR organization standards for Claude Code. Ships the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, the phx-dbexplorer MCP server for browsing a database's schema, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hrm-deployment-script, hrm-notification, phx-debugger and hrm-configuration-document skills moved to the dev-kit plugin in 3.0.0.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
@@ -10,7 +10,10 @@
   "mcpServers": {
     "phx-dbexplorer": {
       "command": "npx",
-      "args": ["-y", "github:hsenidBiz/phx-dbexplorer"],
+      "args": [
+        "-y",
+        "github:hsenidBiz/phx-dbexplorer"
+      ],
       "env": {
         "DB_TYPE": "${PHX_DB_TYPE}",
         "CONNECTION_STRING": "${PHX_DB_CONNECTION_STRING}",
