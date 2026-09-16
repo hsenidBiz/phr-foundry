@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "dba-kit",
+  "version": "1.0.0",
+  "description": "PeoplesHR database tooling for DBAs. Ships the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, and the phx-dbexplorer MCP server for browsing a SQL Server or Postgres schema. Both moved here from org-standards in its 4.0.0 release.",
+  "author": {
+    "name": "PeoplesHR",
+    "email": "sanuja.a@peopleshr.com"
+  },
+  "mcpServers": {
+    "phx-dbexplorer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "github:hsenidBiz/phx-dbexplorer"
+      ],
+      "env": {
+        "DB_TYPE": "${PHX_DB_TYPE}",
+        "CONNECTION_STRING": "${PHX_DB_CONNECTION_STRING}",
+        "SCHEMA_FILTER": "${PHX_DB_SCHEMA_FILTER}"
+      }
+    }
+  }
+}

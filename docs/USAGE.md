@@ -23,12 +23,14 @@ required.
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install dev-kit@phr-foundry
 claude plugin install org-standards@phr-foundry
+claude plugin install dba-kit@phr-foundry
 ```
 
 `dev-kit` carries the build skills (deployment scripts, notifications, the ADO bug
-fixer); `org-standards` carries the standards review, the product-knowledge skill
-and both MCP servers. They are independent — take one or both. Most developers
-want both.
+fixer); `org-standards` carries the product-knowledge skill and the `weknora` MCP
+server; `dba-kit` carries the SQL standards review and the `phx-dbexplorer` MCP
+server. They are independent — take any combination. Most developers want all
+three.
 
 The same commands work as slash commands inside a Claude Code session
 (`/plugin marketplace add ...`, `/plugin install ...`).
@@ -48,8 +50,9 @@ claude plugin install ba-kit@phr-foundry
 > jobs takes `org-standards`, whose skill keeps the business rationale as a
 > secondary.
 >
-> **`dev-kit` is exempt** — it ships no product-knowledge skill, so it sits happily
-> beside either one. A BA who also writes deployment SQL takes `ba-kit` + `dev-kit`.
+> **`dev-kit` and `dba-kit` are exempt** — neither ships a product-knowledge skill,
+> so both sit happily beside either one. A BA who also writes deployment SQL takes
+> `ba-kit` + `dev-kit` + `dba-kit`.
 
 **If the first command hangs or fails on authentication**, your machine has no
 cached GitHub credentials. Use the URL with the account prefix so Git knows
@@ -65,7 +68,7 @@ Add this to the project's `.claude/settings.json` and commit it. Anyone who
 trusts the project gets the marketplace registered and both developer plugins
 enabled automatically. `enabledPlugins` only enables an **already-installed**
 plugin, though — it does not install it — so the first person on the project still
-has to run the two `claude plugin install` commands once:
+has to run the `claude plugin install` commands once:
 
 ```json
 {
@@ -79,7 +82,8 @@ has to run the two `claude plugin install` commands once:
   },
   "enabledPlugins": {
     "dev-kit@phr-foundry": true,
-    "org-standards@phr-foundry": true
+    "org-standards@phr-foundry": true,
+    "dba-kit@phr-foundry": true
   }
 }
 ```
@@ -97,6 +101,7 @@ claude plugin marketplace list      # marketplaces Claude Code knows about
 claude plugin marketplace update phr-foundry
 claude plugin update dev-kit
 claude plugin update org-standards
+claude plugin update dba-kit
 ```
 
 You will **only** receive a new version when the maintainer bumps `version` in
@@ -108,15 +113,17 @@ change and don't see it, ask the maintainer whether the semver was bumped.
 ```shell
 claude plugin uninstall dev-kit
 claude plugin uninstall org-standards
+claude plugin uninstall dba-kit
 ```
 
 ---
 
 ## Plugin catalog
 
-Each plugin serves one audience: `dev-kit` is for developers, `ba-kit` is for Business
-Analysts, and `org-standards` holds what everyone can use. Install the one that matches
-your role — plus `org-standards`, which is for all roles.
+Each plugin serves one audience: `dev-kit` is for developers, `dba-kit` is for
+database work, `ba-kit` is for Business Analysts, and `org-standards` holds what
+everyone can use. Install the one that matches your role — plus `org-standards`,
+which is for all roles.
 
 ### `dev-kit` — PeoplesHR developer build tooling
 
@@ -128,7 +135,7 @@ your role — plus `org-standards`, which is for all roles.
 
 | MCP server | Use it for |
 | --- | --- |
-| *(none)* | `dev-kit` ships skills only. `hrm-notification` and `hrm-deployment-script` want a database — install `org-standards` too and use its [`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing). `phx-debugger` needs your own Azure DevOps MCP server, which no `phr-foundry` plugin has ever shipped. |
+| *(none)* | `dev-kit` ships skills only. `hrm-notification` and `hrm-deployment-script` want a database — install `dba-kit` too and use its [`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing). `phx-debugger` needs your own Azure DevOps MCP server, which no `phr-foundry` plugin has ever shipped. |
 
 > **These three moved here from `org-standards` in its `3.0.0` release.** The skills
 > themselves are unchanged; only the slash-command prefix changed, from
@@ -362,22 +369,26 @@ You do not install the skill separately — it arrives with `dev-kit`.
 
 ---
 
-### `org-standards` — PeoplesHR organization standards
+### `dba-kit` — PeoplesHR database tooling
 
 | Skill | Use it for |
 | --- | --- |
 | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the **OLD hSenid HRM** (.NET Framework) or **NEW PeoplesHR PHR-X** (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
-| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
 | `phx-dbexplorer` | Letting Claude browse your **SQL Server or PostgreSQL** schema — tables, columns, indexes, foreign keys, stored procedures, functions — without writing SQL by hand. |
-| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
 
-> Looking for `hrm-deployment-script`, `hrm-notification` or `phx-debugger`? They
-> moved to [`dev-kit`](#dev-kit--peopleshr-developer-build-tooling) in `3.0.0`.
-> `phx-dbexplorer` stayed here, and those skills still use it — which is why most
-> developers install both plugins.
+> **Both moved here from `org-standards` in its `4.0.0` release.** The skill itself
+> is unchanged; only the slash-command prefix changed, from
+> `/org-standards:phx-sql-standards-review` to
+> `/dba-kit:phx-sql-standards-review`. `phx-dbexplorer` now registers under
+> `dba-kit`, so if you were using it through `org-standards`, run
+> `claude plugin install dba-kit@phr-foundry` and restart Claude Code.
+
+> `dev-kit`'s `hrm-notification` and `hrm-deployment-script` want a database to
+> inspect — `phx-dbexplorer` is what gives them one, which is why most developers
+> install `dba-kit` alongside `dev-kit`.
 
 #### What `phx-sql-standards-review` does
 
@@ -403,7 +414,7 @@ unrelated rules.
 Explicitly:
 
 ```
-/org-standards:phx-sql-standards-review
+/dba-kit:phx-sql-standards-review
 ```
 
 Or describe the work — e.g. *"review this stored proc for PR sign-off"* —
@@ -424,6 +435,21 @@ line/snippet, problem, fix), SHOULD-level notes for undocumented deviations,
 and any MAY-level judgment notes worth flagging.
 
 ---
+
+### `org-standards` — PeoplesHR organization standards
+
+| Skill | Use it for |
+| --- | --- |
+| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
+
+| MCP server | Use it for |
+| --- | --- |
+| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
+
+> Looking for `hrm-deployment-script`, `hrm-notification` or `phx-debugger`? They
+> moved to [`dev-kit`](#dev-kit--peopleshr-developer-build-tooling) in `3.0.0`.
+> `phx-sql-standards-review` and `phx-dbexplorer` moved to
+> [`dba-kit`](#dba-kit--peopleshr-database-tooling) in `4.0.0`.
 
 #### What `phx-product-context` does
 
@@ -514,7 +540,7 @@ tool and be refused.
 
 Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer)
 (a separate public repo — not vendored into `phr-foundry`). Installing the
-`org-standards` plugin registers it, but Claude Code only launches it via
+`dba-kit` plugin registers it, but Claude Code only launches it via
 `npx -y github:hsenidBiz/phx-dbexplorer` the first time you use a tool that
 needs it, and it needs your database credentials to do anything.
 
@@ -602,6 +628,7 @@ The same `WEKNORA_MCP_TOKEN` described under
 | `claude plugin marketplace add` hangs or fails | No cached GitHub credentials — use the `https://hsenidBiz@github.com/...` form, or sign in via Git Credential Manager first. |
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
 | `/org-standards:hrm-deployment-script`, `:hrm-notification` or `:phx-debugger` not found | Those three moved to `dev-kit` in `org-standards` `3.0.0`. Run `claude plugin install dev-kit@phr-foundry` and use the `/dev-kit:` prefix. |
+| `/org-standards:phx-sql-standards-review` not found, or `phx-dbexplorer` gone after an update | Both moved to `dba-kit` in `org-standards` `4.0.0`. Run `claude plugin install dba-kit@phr-foundry`, use the `/dba-kit:` prefix, and restart Claude Code so the MCP server re-registers. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
 | `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback, and `dev-kit` ships no MCP servers. |
@@ -610,7 +637,7 @@ The same `WEKNORA_MCP_TOKEN` described under
 | A notification arrives with empty merge fields | Same cause — the row is in `_PEN` but not in `_DAT`. Compare the four `WHERE` clauses; they must be byte-identical. |
 | A notification arrives with `@TOKEN` printed literally | That token has no matching column in the `_DAT` view. An unmatched token is not an error — it renders as written. |
 | Rows sit unclaimed and nothing is ever sent, with no error | Either the HTML template was never deployed to the scheduler host's alert directory, or `HRM-JS45-SERVICE` is not running against that database. Neither is visible from SQL. |
-| `hrm-notification` or `hrm-deployment-script` has no database to inspect | `dev-kit` declares no MCP servers. Install `org-standards` too — it declares `phx-dbexplorer` — and set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING`. |
+| `hrm-notification` or `hrm-deployment-script` has no database to inspect | `dev-kit` declares no MCP servers. Install `dba-kit` too — it declares `phx-dbexplorer` — and set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING`. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `claude mcp list` warns that `WEKNORA_MCP_TOKEN` is missing | Either it is genuinely unset, or this session started before you set it. Check `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the registry, not `$env:` — then fully restart Claude Code. |

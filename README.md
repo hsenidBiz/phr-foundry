@@ -26,13 +26,19 @@ and the plugins it distributes (`plugins/`).
 │   │   │   └── phx-debugger/
 │   │   │       └── SKILL.md       # Azure DevOps bug fixing, end to end
 │   │   └── README.md
-│   ├── org-standards/            # Developer standards + knowledge plugin
+│   ├── dba-kit/                  # Database tooling for DBAs
 │   │   ├── .claude-plugin/
-│   │   │   └── plugin.json       # Manifest (version: 3.0.0 — see Versioning); also
-│   │   │                         # declares the phx-dbexplorer and weknora MCP servers
+│   │   │   └── plugin.json       # Manifest (version: 1.0.0 — see Versioning); also
+│   │   │                         # declares the phx-dbexplorer MCP server
 │   │   ├── skills/
-│   │   │   ├── phx-sql-standards-review/
-│   │   │   │   └── SKILL.md       # Review-only OLD/NEW SQL standards sign-off
+│   │   │   └── phx-sql-standards-review/
+│   │   │       └── SKILL.md       # Review-only OLD/NEW SQL standards sign-off
+│   │   └── README.md
+│   ├── org-standards/            # Product-knowledge plugin
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json       # Manifest (version: 4.0.0 — see Versioning); also
+│   │   │                         # declares the weknora MCP server
+│   │   ├── skills/
 │   │   │   └── phx-product-context/
 │   │   │       └── SKILL.md       # PeoplesHR product knowledge from WeKnora (developer)
 │   │   └── README.md
@@ -59,6 +65,7 @@ the rule for deciding where a new thing goes, and it is not negotiable:
 | Plugin | Audience | Holds |
 | --- | --- | --- |
 | `dev-kit` | Developers only | Skills and MCP servers no other role would ever invoke |
+| `dba-kit` | DBAs only | Same test, for database work — SQL review and schema browsing |
 | `ba-kit` | Business Analysts only | Same test, for BAs |
 | `org-standards` | **Everyone** | Only what every role can use, whatever their job |
 
@@ -69,12 +76,13 @@ server sits elsewhere. When a server is genuinely needed by two audiences — `w
 today — each plugin that needs it declares it; the duplicate declarations resolve to
 one server at run time and are the intended cost of clean boundaries.
 
-> **The repo predates this rule and does not fully comply yet.** `phx-dbexplorer`,
-> `phx-sql-standards-review` and `phx-product-context` are all developer-only but
-> still sit in `org-standards`. They stay there for now — moving them breaks
-> slash-command prefixes and re-registers an MCP server for everyone already running
-> it. The rule governs **additions**; realigning the existing three is a deliberate,
-> separately-agreed change. See [`CLAUDE.md`](CLAUDE.md#rules).
+> **The repo predates this rule and does not fully comply yet.**
+> `phx-sql-standards-review` and `phx-dbexplorer` were realigned out of
+> `org-standards` into `dba-kit` in `org-standards` `4.0.0`. `phx-product-context`
+> is still developer-only but remains in `org-standards` — moving it breaks
+> slash-command prefixes for everyone already using it. The rule governs
+> **additions**; realigning what is left is a deliberate, separately-agreed
+> change. See [`CLAUDE.md`](CLAUDE.md#rules).
 
 ## What's in `dev-kit`
 
@@ -94,21 +102,26 @@ slash-command prefix, from `/org-standards:` to `/dev-kit:`.
 
 `dev-kit` declares no MCP servers of its own. `hrm-notification` and
 `hrm-deployment-script` are much more useful with a database to inspect, which is
-what `org-standards`' `phx-dbexplorer` gives them — so install both plugins if you
+what `dba-kit`'s `phx-dbexplorer` gives them — so install both plugins if you
 want that. `phx-debugger`'s Azure DevOps server was always yours to add and still
 is.
 
-## What's in `org-standards`
+## What's in `dba-kit`
 
-The standards and product-knowledge half. Two skills of its own, plus two MCP
-servers.
+The database half. One skill and one MCP server, for DBAs and anyone else doing
+database work — see [`plugins/dba-kit/README.md`](plugins/dba-kit/README.md).
 
 | Source | Skill / MCP server | Notes |
 | --- | --- | --- |
 | **This repo (own skill)** | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
-| **This repo (own skill)** | `phx-product-context` | Grounds any answer about PeoplesHR module behaviour in the product documentation held in WeKnora, and cites the documents used. Searches `Product Development` deep and `PeoplesHR Academy` shallow, and answers technically. Needs `WEKNORA_MCP_TOKEN`. |
 | **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a **public** .NET repo, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use (the repo must stay public — the download is unauthenticated). |
-| **Remote server on the WeKnora VM** | `weknora` (MCP server) | Read-only retrieval from the `Product Development` and `PeoplesHR Academy` knowledge bases at `https://weknora.phrsandbox.dev/mcp`. A `type: "http"` server — nothing is downloaded or run locally. Read-only is enforced by a `retrieve`-only API key on the server, not by the advertised tool list. |
+
+Both shipped in `org-standards` up to `3.0.0` and moved here in `org-standards`
+`4.0.0`. Nothing about the skill itself changed — only the slash-command prefix,
+from `/org-standards:phx-sql-standards-review` to
+`/dba-kit:phx-sql-standards-review`. `phx-dbexplorer` re-registers under
+`dba-kit`, so install this plugin if you were relying on it through
+`org-standards`.
 
 > **Before `phx-dbexplorer` will work**, you must set `PHX_DB_TYPE`,
 > `PHX_DB_CONNECTION_STRING`, and optionally `PHX_DB_SCHEMA_FILTER` in your own
@@ -120,6 +133,15 @@ servers.
 > or changing these — an already-running session won't pick up the new
 > values. See the [usage guide's Plugin catalog](docs/USAGE.md#plugin-catalog)
 > for the full variable table.
+
+## What's in `org-standards`
+
+The product-knowledge half. One skill of its own, plus one MCP server.
+
+| Source | Skill / MCP server | Notes |
+| --- | --- | --- |
+| **This repo (own skill)** | `phx-product-context` | Grounds any answer about PeoplesHR module behaviour in the product documentation held in WeKnora, and cites the documents used. Searches `Product Development` deep and `PeoplesHR Academy` shallow, and answers technically. Needs `WEKNORA_MCP_TOKEN`. |
+| **Remote server on the WeKnora VM** | `weknora` (MCP server) | Read-only retrieval from the `Product Development` and `PeoplesHR Academy` knowledge bases at `https://weknora.phrsandbox.dev/mcp`. A `type: "http"` server — nothing is downloaded or run locally. Read-only is enforced by a `retrieve`-only API key on the server, not by the advertised tool list. |
 
 > **Before `weknora` will work**, you must set `WEKNORA_MCP_TOKEN` in your own
 > environment — one token shared by the whole team, handed out through your
@@ -143,12 +165,13 @@ all — it's a plain MCP server binary fetched via `npx`.)
 > **[usage guide](docs/USAGE.md)** — install, update, and how to drive each skill.
 
 Point Claude Code at the GitHub repo, then install the plugins. Most developers
-want both `dev-kit` and `org-standards`:
+want `dev-kit`, `org-standards` and `dba-kit`:
 
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install dev-kit@phr-foundry
 claude plugin install org-standards@phr-foundry
+claude plugin install dba-kit@phr-foundry
 ```
 
 Each skill is namespaced under its **own** plugin, so invoke it with:
@@ -157,7 +180,7 @@ Each skill is namespaced under its **own** plugin, so invoke it with:
 /dev-kit:hrm-deployment-script
 /dev-kit:hrm-notification
 /dev-kit:phx-debugger <bug-id>
-/org-standards:phx-sql-standards-review
+/dba-kit:phx-sql-standards-review
 /org-standards:phx-product-context
 ```
 
@@ -180,7 +203,8 @@ add it to that project's `.claude/settings.json`:
   },
   "enabledPlugins": {
     "dev-kit@phr-foundry": true,
-    "org-standards@phr-foundry": true
+    "org-standards@phr-foundry": true,
+    "dba-kit@phr-foundry": true
   }
 }
 ```
@@ -208,14 +232,14 @@ needs `WEKNORA_MCP_TOKEN`. See
 > `org-standards`, whose developer skill keeps the business rationale as a
 > secondary.
 >
-> This applies **only** to that pair. `dev-kit` ships no product-knowledge skill,
-> so it is safe alongside either one — a BA who also writes deployment SQL can
-> take `ba-kit` + `dev-kit`.
+> This applies **only** to that pair. `dev-kit` and `dba-kit` ship no
+> product-knowledge skill, so both are safe alongside either one — a BA who also
+> writes deployment SQL can take `ba-kit` + `dev-kit` + `dba-kit`.
 
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (`dev-kit` is at
-`1.0.0`, `org-standards` at `3.0.0`, `ba-kit` at `1.0.0`). Claude Code resolves a
+`1.0.0`, `org-standards` at `4.0.0`, `ba-kit` at `1.0.0`, `dba-kit` at `1.0.0`). Claude Code resolves a
 plugin's version from the first of these that is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**
@@ -239,6 +263,7 @@ From the directory that **contains** this repository, start Claude Code and run:
 /plugin marketplace add ./PHR-Foundry
 /plugin install dev-kit@phr-foundry
 /plugin install org-standards@phr-foundry
+/plugin install dba-kit@phr-foundry
 /reload-plugins
 ```
 

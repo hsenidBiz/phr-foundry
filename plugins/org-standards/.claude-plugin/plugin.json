@@ -1,25 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "org-standards",
-  "version": "3.0.0",
-  "description": "PeoplesHR organization standards for Claude Code. Ships the phx-sql-standards-review skill for reviewing T-SQL against the OLD hSenid HRM or NEW PeoplesHR PHR-X SQL standards, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, the phx-dbexplorer MCP server for browsing a database's schema, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hrm-deployment-script, hrm-notification and phx-debugger skills moved to the dev-kit plugin in 3.0.0.",
+  "version": "4.0.0",
+  "description": "PeoplesHR organization standards for Claude Code. Ships the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hrm-deployment-script, hrm-notification and phx-debugger skills moved to the dev-kit plugin in 3.0.0; the phx-sql-standards-review skill and the phx-dbexplorer MCP server moved to the dba-kit plugin in 4.0.0.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
   },
   "mcpServers": {
-    "phx-dbexplorer": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "github:hsenidBiz/phx-dbexplorer"
-      ],
-      "env": {
-        "DB_TYPE": "${PHX_DB_TYPE}",
-        "CONNECTION_STRING": "${PHX_DB_CONNECTION_STRING}",
-        "SCHEMA_FILTER": "${PHX_DB_SCHEMA_FILTER}"
-      }
-    },
     "weknora": {
       "type": "http",
       "url": "https://weknora.phrsandbox.dev/mcp",
