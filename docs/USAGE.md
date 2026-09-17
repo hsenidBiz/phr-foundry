@@ -419,9 +419,9 @@ To build the output:
   found an exposed password, rotate it.
 - The TBD items, if you chose any.
 
-> **Important:** the copyright block uses provisional wording until
-> `assets/house.json` has `"copyright_confirmed": true`. The skill reminds you on
-> every run until then.
+The copyright page uses the official hSenid Business Solutions PLC wording,
+kept in `assets/house.json` (one paragraph per line). Change it there, not in
+the document.
 
 ---
 
