@@ -1,0 +1,15 @@
+{
+  "company": "hSenid Business Solutions PLC",
+  "product": "PeoplesHR",
+  "classification": "Confidential | Internal",
+  "copyright": "Copyright © {year} hSenid Business Solutions PLC. All rights reserved. No part of this document may be reproduced, stored or transmitted in any form without the prior written permission of hSenid Business Solutions PLC. PeoplesHR is a trademark of hSenid Business Solutions PLC.",
+  "copyright_confirmed": false,
+  "colors": { "brand": "2F5496", "table_header": "DEEAF6", "table_border": "BFBFBF", "code_bg": "F2F2F2" },
+  "fonts": { "heading": "Cambria", "body": "Calibri", "code": "Consolas" },
+  "callouts": {
+    "Note": { "fill": "F2F2F2", "bar": "7F7F7F" },
+    "Important": { "fill": "FFF4E5", "bar": "C55A11" },
+    "Warning": { "fill": "FDECEA", "bar": "C00000" },
+    "Recommendation": { "fill": "E6F4F1", "bar": "1F7A6B" }
+  }
+}
