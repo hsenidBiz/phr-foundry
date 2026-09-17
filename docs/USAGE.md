@@ -95,6 +95,7 @@ claude plugin uninstall org-standards
 | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the **OLD hSenid HRM** (.NET Framework) or **NEW PeoplesHR PHR-X** (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
 | `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 | `hrm-notification` | Building an **email notification for any module** on the `HRM-JS45-SERVICE` Job Scheduler — the four views, the claim column, the `HS_HR_JS_*` configuration rows and the HTML template. Needs access to the client database. |
+| `hrm-configuration-document` | Writing the **organization-standard Configuration Document** for a finished CR — turns rough developer notes into the house `.md`, then a branded `.docx` and PDF for the SharePoint "Module's Configuration Docs" library. Needs Python with `python-docx`; the PDF step needs Word on Windows. |
 
 | MCP server | Use it for |
 | --- | --- |
@@ -372,6 +373,58 @@ silently mails the same row on every pass, forever.
 
 ---
 
+#### What `hrm-configuration-document` does
+
+```
+/org-standards:hrm-configuration-document
+```
+
+Plain language works too — *"write the config doc for CR 116712"*, *"turn these
+notes into a configuration guide"*. It also loads when you ask it to review or
+update an existing configuration document.
+
+It turns the notes a developer writes after finishing a CR into the house
+Configuration Document: a `.md` in the standard structure and voice, a branded
+`.docx` built from it, and a PDF for the SharePoint library. The audience is
+implementation, support and client teams, so it strips code references (files,
+classes, branches, PR numbers) and anything that looks like a credential.
+
+**Every fact comes from the developer.** It never guesses a default value, a data
+type, a navigation path, who configures a setting, or a user-facing message. When
+one is missing it asks — one question at a time, with suggested answers and a
+"leave it TBD" option. `[TBD - confirm with developer]` appears in the document
+only where you chose TBD. It always asks whether there are screenshots, even when
+you say you are in a hurry.
+
+#### What it needs from you
+
+- Your notes: rough English is fine. `assets/developer-input-template.md` in the
+  skill folder lists what a complete set covers.
+- Answers to its questions about the facts your notes leave out.
+- Screenshots, if there are any, with one line saying what each shows.
+
+To build the output:
+
+- **Python** with `python -m pip install --user python-docx` for the `.docx`.
+- **Microsoft Word on Windows** for the PDF. Without Word, open the `.docx`,
+  update fields (Ctrl+A, F9) and save it as PDF yourself.
+
+#### What you get back
+
+- `<Release>-<WorkItemID>-<Module>-<Short Title>-Doc.md`, plus the same-named
+  `.docx` and `.pdf`. The builder generates the cover, copyright page, table of
+  contents, heading numbers, header and footer.
+- The tier it chose (T1/T2/T3), which decides the required sections.
+- A **Removed from notes** list (code references and secrets it took out). If it
+  found an exposed password, rotate it.
+- The TBD items, if you chose any.
+
+> **Important:** the copyright block uses provisional wording until
+> `assets/house.json` has `"copyright_confirmed": true`. The skill reminds you on
+> every run until then.
+
+---
+
 #### `phx-dbexplorer` — database schema browsing
 
 Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer)
@@ -425,6 +478,10 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 | A notification arrives with empty merge fields | Same cause — the row is in `_PEN` but not in `_DAT`. Compare the four `WHERE` clauses; they must be byte-identical. |
 | A notification arrives with `@TOKEN` printed literally | That token has no matching column in the `_DAT` view. An unmatched token is not an error — it renders as written. |
 | Rows sit unclaimed and nothing is ever sent, with no error | Either the HTML template was never deployed to the scheduler host's alert directory, or `HRM-JS45-SERVICE` is not running against that database. Neither is visible from SQL. |
+| `hrm-configuration-document` stops at `check_doc.py` errors | Fix each ERROR it lists. It rejects any TBD you did not choose, leftover skeleton tokens, code references, credentials, and screenshot placeholders when you said there are none. |
+| `build_docx.py` fails with `No module named 'docx'` | Run `python -m pip install --user python-docx`. |
+| The PDF step reports "Microsoft Word is not available" | `export_pdf.ps1` needs Word on Windows. Open the `.docx`, update fields (Ctrl+A, F9) and save as PDF manually. |
+| The table of contents or page numbers are blank in the `.docx` | Fields are not refreshed until Word updates them. Run `export_pdf.ps1`, or press Ctrl+A, F9 in Word. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |

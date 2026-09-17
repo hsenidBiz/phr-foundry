@@ -32,6 +32,15 @@ One repo holds both the catalog and the plugins.
     `reference/` (`views-template.sql`, `config-template.sql`, `alert-template.html`),
     read by the skill itself. The whole folder ships together; `SKILL.md` alone is not
     the skill.
+  - `skills/hrm-configuration-document/SKILL.md` — its own skill: write the
+    organization-standard Configuration Document for a finished CR from the developer's
+    notes — the house `.md`, then a branded `.docx` and PDF. Asks the developer for every
+    missing fact rather than guessing. Supporting files: `references/` (template outline,
+    input mapping, style guide, quality checklist), `assets/` (skeleton, input template,
+    `house.json` branding, logo), `examples/`, and `scripts/` (`check_doc.py`,
+    `build_docx.py` — needs `python-docx` — and `export_pdf.ps1`, which needs Word on
+    Windows). Ported from the personal skill `phr-configuration-document`, renamed for the
+    `hrm-` prefix rule. The whole folder ships together; `SKILL.md` alone is not the skill.
   - MCP server `phx-dbexplorer` — schema-browsing tool for SQL Server/Postgres.
     Source lives in the separate public repo
     `https://github.com/hsenidBiz/phx-dbexplorer` (a .NET project, **not**
@@ -49,7 +58,7 @@ One repo holds both the catalog and the plugins.
   held nothing but placeholder READMEs.
 
 ## Rules
-- **Version lives in `plugin.json` only** (currently `2.10.0`). Bump the semver on every
+- **Version lives in `plugin.json` only** (currently `2.11.0`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
 - **Skill names must start with `hrm-` or `phx-` and be kebab-case** — non-negotiable.

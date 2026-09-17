@@ -17,7 +17,7 @@ and the plugins it distributes (`plugins/`).
 ├── plugins/
 │   └── org-standards/            # One plugin
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 2.10.0 — see Versioning);
+│       │   └── plugin.json       # Manifest (version: 2.11.0 — see Versioning);
 │       │                         # also declares the phx-dbexplorer MCP server
 │       ├── skills/
 │       │   ├── hrm-deployment-script/
@@ -26,8 +26,10 @@ and the plugins it distributes (`plugins/`).
 │       │   │   └── SKILL.md       # Review-only OLD/NEW SQL standards sign-off
 │       │   ├── phx-debugger/
 │       │   │   └── SKILL.md       # Azure DevOps bug fixing, end to end
-│       │   └── hrm-notification/
-│       │       └── SKILL.md       # Job Scheduler email notifications
+│       │   ├── hrm-notification/
+│       │   │   └── SKILL.md       # Job Scheduler email notifications
+│       │   └── hrm-configuration-document/
+│       │       └── SKILL.md       # CR Configuration Document (.md/.docx/PDF)
 │       └── README.md
 ├── .github/
 │   └── workflows/
@@ -39,7 +41,7 @@ and the plugins it distributes (`plugins/`).
 
 ## What's in `org-standards`
 
-The plugin ships four skills of its own, plus one MCP server.
+The plugin ships five skills of its own, plus one MCP server.
 
 | Source | Skill(s) / MCP server | Notes |
 | --- | --- | --- |
@@ -47,6 +49,7 @@ The plugin ships four skills of its own, plus one MCP server.
 | **This repo (own skill)** | `phx-sql-standards-review` | Review-only sign-off on a T-SQL script against either the OLD hSenid HRM (.NET Framework) or NEW PeoplesHR PHR-X (.NET Core) SQL standard, auto-detecting which system it targets. Never edits the SQL. |
 | **This repo (own skill)** | `phx-debugger` | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA, status change. Needs the `superpowers` plugin and a per-developer Azure DevOps MCP server. |
 | **This repo (own skill)** | `hrm-notification` | Builds a module email notification on the `HRM-JS45-SERVICE` Job Scheduler — four views, claim column, `HS_HR_JS_*` config rows, HTML template. A notification is **data, not code**. |
+| **This repo (own skill)** | `hrm-configuration-document` | Writes the organization-standard Configuration Document for a finished CR from developer notes — house `.md`, branded `.docx` and PDF for the SharePoint library. Asks the developer for every missing fact. |
 | **Separate repo, fetched at run time** | `phx-dbexplorer` (MCP server) | Schema browsing for SQL Server/Postgres. Source: [`hsenidBiz/phx-dbexplorer`](https://github.com/hsenidBiz/phx-dbexplorer) — a **public** .NET repo, not vendored here. `plugin.json` runs it via `npx -y github:hsenidBiz/phx-dbexplorer`, which pulls the prebuilt binary for your OS/arch from that repo's GitHub Releases on first use (the repo must stay public — the download is unauthenticated). |
 
 > **Before `phx-dbexplorer` will work**, you must set `PHX_DB_TYPE`,
@@ -86,6 +89,7 @@ Each skill is namespaced under the plugin, so invoke it with:
 /org-standards:phx-sql-standards-review
 /org-standards:phx-debugger <bug-id>
 /org-standards:hrm-notification
+/org-standards:hrm-configuration-document
 ```
 
 Claude also loads a skill automatically when its `description` matches the
@@ -114,7 +118,7 @@ add it to that project's `.claude/settings.json`:
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (currently
-`2.10.0`). Claude Code resolves a plugin's version from the first of these that
+`2.11.0`). Claude Code resolves a plugin's version from the first of these that
 is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**
