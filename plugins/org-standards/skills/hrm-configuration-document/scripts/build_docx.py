@@ -288,10 +288,12 @@ def build_cover(doc, meta, figure_count):
     r = p.add_run(f"The version of this document is {meta['doc_version']}")
     r.bold = True
     year = meta.get("year") or str(datetime.date.today().year)
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    r = p.add_run(HOUSE["copyright"].replace("{year}", year))
-    r.font.size = Pt(9)
+    # one paragraph per line of the copyright text
+    for line in HOUSE["copyright"].replace("{year}", year).split("\n"):
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        r = p.add_run(line)
+        r.font.size = Pt(9)
     doc.add_paragraph()
     p = doc.add_paragraph()
     r = p.add_run("Table of Contents")
