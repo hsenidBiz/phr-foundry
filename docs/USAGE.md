@@ -22,37 +22,41 @@ required.
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install dev-kit@phr-foundry
-claude plugin install org-standards@phr-foundry
 claude plugin install dba-kit@phr-foundry
 ```
 
 `dev-kit` carries the build skills (deployment scripts, notifications, the ADO bug
-fixer); `org-standards` carries the product-knowledge skill and the `weknora` MCP
-server; `dba-kit` carries the SQL standards review and the `phx-dbexplorer` MCP
-server. They are independent — take any combination. Most developers want all
-three.
+fixer), the developer product-knowledge skill `phx-product-context`, and the
+`weknora` MCP server; `dba-kit` carries the SQL standards review and the
+`phx-dbexplorer` MCP server. Most developers want both.
 
 The same commands work as slash commands inside a Claude Code session
 (`/plugin marketplace add ...`, `/plugin install ...`).
 
-**Business Analysts install `ba-kit` instead of `org-standards`**, not as well:
+**Business Analysts install `org-standards` instead of `dev-kit`**, not as well —
+plus `ba-kit`, which carries the FRD authoring skill `phx-write-frd`:
 
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
+claude plugin install org-standards@phr-foundry
 claude plugin install ba-kit@phr-foundry
 ```
 
-> ⚠️ **One or the other, never both.** `org-standards` ships
-> `phx-product-context` and `ba-kit` ships `phx-business-context`. They search the
-> same two WeKnora knowledge bases in opposite orders and answer in different
-> voices, so with both installed they compete on question wording and misroute.
-> Developers take `org-standards`; BAs take `ba-kit`; anyone genuinely doing both
-> jobs takes `org-standards`, whose skill keeps the business rationale as a
-> secondary.
+> ⚠️ **One or the other, never both.** `dev-kit` ships `phx-product-context` and
+> `org-standards` ships `phx-business-context`. They search the same two WeKnora
+> knowledge bases in opposite orders and answer in different voices, so with both
+> installed they compete on question wording and misroute. Developers take
+> `dev-kit`; BAs take `org-standards`; anyone genuinely doing both jobs takes
+> `dev-kit`, whose skill keeps the business rationale as a secondary.
 >
-> **`dev-kit` and `dba-kit` are exempt** — neither ships a product-knowledge skill,
+> **`dba-kit` and `ba-kit` are exempt** — neither ships a product-knowledge skill,
 > so both sit happily beside either one. A BA who also writes deployment SQL takes
-> `ba-kit` + `dev-kit` + `dba-kit`.
+> `org-standards` + `ba-kit` + `dba-kit`.
+>
+> This swapped in `dev-kit` `2.0.0` / `org-standards` `5.0.0`. Before that,
+> `phx-product-context` was in `org-standards` and `phx-business-context` was in
+> `ba-kit`, which then shipped no skills at all until `2.1.0` added
+> `phx-write-frd`.
 
 **If the first command hangs or fails on authentication**, your machine has no
 cached GitHub credentials. Use the URL with the account prefix so Git knows
@@ -82,7 +86,6 @@ has to run the `claude plugin install` commands once:
   },
   "enabledPlugins": {
     "dev-kit@phr-foundry": true,
-    "org-standards@phr-foundry": true,
     "dba-kit@phr-foundry": true
   }
 }
@@ -100,7 +103,6 @@ claude plugin marketplace list      # marketplaces Claude Code knows about
 ```shell
 claude plugin marketplace update phr-foundry
 claude plugin update dev-kit
-claude plugin update org-standards
 claude plugin update dba-kit
 ```
 
@@ -112,7 +114,6 @@ change and don't see it, ask the maintainer whether the semver was bumped.
 
 ```shell
 claude plugin uninstall dev-kit
-claude plugin uninstall org-standards
 claude plugin uninstall dba-kit
 ```
 
@@ -121,9 +122,10 @@ claude plugin uninstall dba-kit
 ## Plugin catalog
 
 Each plugin serves one audience: `dev-kit` is for developers, `dba-kit` is for
-database work, `ba-kit` is for Business Analysts, and `org-standards` holds what
-everyone can use. Install the one that matches your role — plus `org-standards`,
-which is for all roles.
+database work, and `org-standards` and `ba-kit` are both for Business Analysts —
+`org-standards` holds the product-knowledge skill, `ba-kit` the FRD authoring
+skill. Install the ones that match your role — plus `dba-kit` if you touch the
+database. Never install `dev-kit` and `org-standards` together.
 
 ### `dev-kit` — PeoplesHR developer build tooling
 
@@ -133,15 +135,20 @@ which is for all roles.
 | `hrm-notification` | Building an **email notification for any module** on the `HRM-JS45-SERVICE` Job Scheduler — the four views, the claim column, the `HS_HR_JS_*` configuration rows and the HTML template. Needs access to the client database. |
 | `phx-debugger` | Fixing an **Azure DevOps bug end to end** from its ID — root cause investigation, fix plan, implementation, RCA onto the work item, status change. Needs the `superpowers` plugin and an Azure DevOps MCP server (see below). |
 | `hrm-configuration-document` | Writing the **organization-standard Configuration Document** for a finished CR — turns rough developer notes into the house `.md`, then a branded `.docx` and PDF for the SharePoint "Module's Configuration Docs" library. Needs Python with `python-docx`; the PDF step needs Word on Windows. |
+| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
+| `phx-write-sdd` | Writing the **Architecture / Solution Design Document** (`ARCH-`) for a feature — the technical companion to the BA's FRD. Reads the template and sample live from the PHR-X wiki every run, resolves the FRD's cross-module touchpoints into technical decisions, and never invents a table, column or endpoint. Needs an Azure DevOps MCP server (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
-| *(none)* | `dev-kit` ships skills only. `hrm-notification` and `hrm-deployment-script` want a database — install `dba-kit` too and use its [`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing). `phx-debugger` needs your own Azure DevOps MCP server, which no `phr-foundry` plugin has ever shipped. |
+| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
+| *(not shipped)* | `hrm-notification` and `hrm-deployment-script` want a database — install `dba-kit` too and use its [`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing). `phx-debugger` and `phx-write-sdd` both need your own Azure DevOps MCP server, which no `phr-foundry` plugin has ever shipped — it is the same server for both. |
 
-> **These three moved here from `org-standards` in its `3.0.0` release.** The skills
-> themselves are unchanged; only the slash-command prefix changed, from
-> `/org-standards:` to `/dev-kit:`. If you had `org-standards` before, run
-> `claude plugin install dev-kit@phr-foundry` to get them back.
+> **The first four moved here from `org-standards` in its `3.0.0` release, and
+> `phx-product-context` in its `5.0.0`.** The skills themselves are unchanged; only
+> the slash-command prefix changed, from `/org-standards:` to `/dev-kit:`. If you
+> had `org-standards` before, run `claude plugin install dev-kit@phr-foundry` to
+> get them back — and uninstall `org-standards`, which now ships the BA skill and
+> must not sit alongside `dev-kit`.
 
 #### What `hrm-deployment-script` does
 
@@ -256,7 +263,7 @@ the trigger or the recipient is ambiguous it asks; everything else it decides.
 It also needs a database to inspect, for both the discovery queries and the
 verification. The intended way to give it one is the
 [`phx-dbexplorer`](#phx-dbexplorer--database-schema-browsing) MCP server — which
-lives in `org-standards`, not here, so install that plugin alongside `dev-kit`.
+lives in `dba-kit`, not here, so install that plugin alongside `dev-kit`.
 
 #### What you get back
 
@@ -422,6 +429,142 @@ the document.
 
 ---
 
+#### What `phx-product-context` does
+
+```
+/dev-kit:phx-product-context
+```
+
+You will rarely type that. The skill fires on its own whenever PeoplesHR or one of
+its modules comes up — designing or changing a feature, writing or reviewing code,
+investigating a defect, explaining how something behaves. It skips itself for purely
+mechanical work (renaming, formatting, a syntax question, generic programming help),
+and does not announce the skip.
+
+**What it does before answering.** It turns your question into a real search query
+built from the module in play, the file or ticket open and the conversation — *"why
+is this rejected"* becomes *"leave approval rejection overlapping date range
+validation"* — then searches the WeKnora knowledge bases through the `weknora` MCP
+server: `Product Development` deep for the rules and intent, `PeoplesHR Academy`
+shallow to confirm how the behaviour appears to the user. It retries once if the
+results are thin, and for broad *"explain module X"* questions it reads the written
+overview instead of collecting scattered passages.
+
+**What you get back.** A technical answer — data model, rules, edge cases,
+integration points — with the business rationale kept visible, and the WeKnora
+documents cited by title so you can open them.
+
+**When WeKnora has nothing, it says so and stops.** It will not fill the gap with
+assumptions about PeoplesHR behaviour. That is the point of the skill: an answer you
+can act on, or an honest blank.
+
+#### What `phx-product-context` needs from you
+
+One environment variable: `WEKNORA_MCP_TOKEN`, the bearer token for the `weknora`
+MCP server. It is **one shared token for the whole team**, handed out through your
+credential channel — your password manager or IT onboarding. It is not in this
+repo, which is public, and must never be committed, pasted into a chat, or typed
+into a Claude conversation. Ask PeoplesHR &lt;sanuja.a@peopleshr.com&gt; if you do
+not have it.
+
+On Windows, prompt for it rather than using `setx`, which would put the token in
+your PowerShell history and in `argv`:
+
+```powershell
+$s = Read-Host -AsSecureString 'WEKNORA_MCP_TOKEN'
+[Environment]::SetEnvironmentVariable('WEKNORA_MCP_TOKEN',
+  [Runtime.InteropServices.Marshal]::PtrToStringBSTR(
+    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)), 'User')
+```
+
+That keeps the value out of history and argv. It is not a secret store: Windows
+keeps user environment variables as plaintext in `HKCU\Environment`, the same
+exposure `PHX_DB_CONNECTION_STRING` already has here. On macOS/Linux, `export` it
+from your shell profile with the profile file at mode `600`.
+
+> ⚠️ **Then restart Claude Code — and only then.** Windows reads user environment
+> variables at process start, so a terminal or Claude Code already running when you
+> set the variable will never see it. A correctly installed token therefore presents
+> exactly as a broken one: an empty `$env:WEKNORA_MCP_TOKEN` and a missing-variable
+> warning for `weknora` in `claude mcp list`. Check
+> `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the
+> registry, not the process — before concluding anything is wrong.
+
+Full prerequisites and troubleshooting:
+[`plugins/dev-kit/skills/phx-product-context/INSTALL.md`](../plugins/dev-kit/skills/phx-product-context/INSTALL.md).
+
+---
+
+#### What `phx-write-sdd` does
+
+Authors the **SDD — Architecture / Solution Design Document**, the technical design
+document for a PeoplesHR feature (`ARCH-` prefix). Drafted by the Solutioning
+Engineer, accountable to the Solution Architect. Its business companion is the FRD,
+which `ba-kit`'s [`phx-write-frd`](#what-phx-write-frd-does) writes.
+
+**The template is not in the plugin.** The template and the filled sample are read
+live from the PHR-X project wiki on **every run**, through your Azure DevOps MCP
+server. There is no local copy, and no CLI, REST or PAT fallback — so a change to
+the organization's standard reaches everyone the moment it is published, and a run
+that cannot reach the wiki produces nothing rather than working from a remembered
+structure.
+
+#### How to invoke it
+
+```
+/dev-kit:phx-write-sdd
+```
+
+Or just describe it — *"write the solution design for the leave-encashment
+feature"*. It also fires at the end of an architecture or grilling session when you
+ask for the discussion to be written up, captured, or turned into an SDD: the
+session transcript, and any ADRs or `CONTEXT.md` it produced, are legitimate input.
+
+#### What it needs from you
+
+**The first thing it does is ask.** It reads the wiki template, maps what you have
+supplied onto the template's sections, and comes back with **one consolidated
+question** listing every section it has no input for — by number. It waits for your
+answers before drafting anything, rather than drafting the covered half and asking
+about the rest.
+
+Expect to be asked for:
+
+| | |
+| --- | --- |
+| **The linked FRD** | §5 is the point of this document — every cross-module touchpoint the FRD recorded has to be resolved into a technical decision here. Without the FRD it asks rather than reconstructing the touchpoints. |
+| **Document Control** | The SDD ID (`ARCH-<MODULE>-<YYYY>-<NNN>`), feature name, Solutioning Engineer and Solution Architect names, version, linked FRD ID, target wiki path. A design session never supplies these. |
+| **The as-is schema** | Read from a repository file you name. It will not infer table or column names from a module name. |
+
+It will not allocate the next document number for you, and it will **not** derive
+the SDD's ID from the FRD's — the numbers often match, but that is a convention,
+not a rule it may apply.
+
+#### What you get back
+
+A **markdown file in your repository** — `docs/sdd/<ARCH-ID>-<kebab-case-feature-name>.md`
+by convention, or wherever your repo already keeps SDDs. Not a wall of text in the
+chat: a 16-section document pasted into a conversation cannot be reviewed, diffed
+or version-controlled.
+
+**Writing the file is not publishing.** Nothing reaches the wiki until you ask for
+it explicitly, and even then the skill shows you the exact path and content and
+stops for your approval before any write — a wiki page is visible to the whole
+organization the moment it lands. After publishing it re-reads the page to confirm
+what actually landed, and says so plainly if someone else edited it in between.
+
+Nothing in the document is invented. Where it has no input it stops and asks, and
+it will not launder a guess by labelling it `[PROPOSED]`, `TBD` or `TODO`, or by
+filing it under Open Questions — that table is for decisions the team genuinely has
+not made, not for inputs you were never asked for.
+
+Full prerequisites and troubleshooting:
+[`plugins/dev-kit/skills/phx-write-sdd/INSTALL.md`](../plugins/dev-kit/skills/phx-write-sdd/INSTALL.md).
+If you already set the Azure DevOps MCP server up for `phx-debugger`, you are done —
+it is the same server.
+
+---
+
 ### `dba-kit` — PeoplesHR database tooling
 
 | Skill | Use it for |
@@ -489,84 +632,60 @@ and any MAY-level judgment notes worth flagging.
 
 ---
 
-### `org-standards` — PeoplesHR organization standards
+### `org-standards` — PeoplesHR product knowledge for Business Analysts
 
 | Skill | Use it for |
 | --- | --- |
-| `phx-product-context` | Answering **how a PeoplesHR module actually behaves** — grounded in the product documentation held in WeKnora rather than general knowledge, and citing the documents used. Fires on its own whenever PeoplesHR comes up while you design a feature, review code or chase a defect. Needs `WEKNORA_MCP_TOKEN` (see below). |
+| `phx-business-context` | Answering **how a PeoplesHR module works** in business terms — module behaviour, user flows, configuration and the rules behind them — grounded in the product documentation held in WeKnora and citing the documents used. Needs `WEKNORA_MCP_TOKEN`. |
 
 | MCP server | Use it for |
 | --- | --- |
-| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`Product Development`, `PeoplesHR Academy`). Backs `phx-product-context`; you never call it directly. |
+| `weknora` | Read-only retrieval from the PeoplesHR **WeKnora** knowledge bases (`PeoplesHR Academy`, `Product Development`). Backs `phx-business-context`; you never call it directly. |
 
 > Looking for `hrm-deployment-script`, `hrm-notification` or `phx-debugger`? They
 > moved to [`dev-kit`](#dev-kit--peopleshr-developer-build-tooling) in `3.0.0`.
 > `phx-sql-standards-review` and `phx-dbexplorer` moved to
-> [`dba-kit`](#dba-kit--peopleshr-database-tooling) in `4.0.0`.
+> [`dba-kit`](#dba-kit--peopleshr-database-tooling) in `4.0.0`. `phx-product-context`
+> moved to [`dev-kit`](#dev-kit--peopleshr-developer-build-tooling) in `5.0.0`, when
+> `phx-business-context` arrived here from `ba-kit`.
 
-#### What `phx-product-context` does
+> ⚠️ **Do not install `dev-kit` alongside this plugin** — its
+> `phx-product-context` is the developer counterpart of `phx-business-context` and
+> the two misroute against each other.
+
+#### What `phx-business-context` does
 
 ```
-/org-standards:phx-product-context
+/org-standards:phx-business-context
 ```
 
-You will rarely type that. The skill fires on its own whenever PeoplesHR or one of
-its modules comes up — designing or changing a feature, writing or reviewing code,
-investigating a defect, explaining how something behaves. It skips itself for purely
-mechanical work (renaming, formatting, a syntax question, generic programming help),
-and does not announce the skip.
+As with the developer skill, you will rarely type that — it fires on its own
+whenever PeoplesHR or one of its modules comes up while you write requirements,
+design a solution, answer a client question or explain how something works. It skips
+itself for work with no PeoplesHR behaviour in it: formatting, summarising your own
+text, general writing help.
 
-**What it does before answering.** It turns your question into a real search query
-built from the module in play, the file or ticket open and the conversation — *"why
-is this rejected"* becomes *"leave approval rejection overlapping date range
-validation"* — then searches the WeKnora knowledge bases through the `weknora` MCP
-server: `Product Development` deep for the rules and intent, `PeoplesHR Academy`
-shallow to confirm how the behaviour appears to the user. It retries once if the
-results are thin, and for broad *"explain module X"* questions it reads the written
-overview instead of collecting scattered passages.
+It builds a real search query from the module and business process in play — *"how
+does this work for part timers"* becomes *"leave entitlement proration part-time
+employees"* — then leads with the `PeoplesHR Academy` knowledge base, which
+describes how the product actually behaves for a user, and uses `Product
+Development` for the intent and rules behind it. That is the **opposite** order to
+the developer skill, and the reason the two must not be installed together.
 
-**What you get back.** A technical answer — data model, rules, edge cases,
-integration points — with the business rationale kept visible, and the WeKnora
-documents cited by title so you can open them.
+**What you get back.** A business answer — what the user sees, the process, the
+rules, the configuration — with no code or schemas unless you ask, and the WeKnora
+documents cited by title.
 
-**When WeKnora has nothing, it says so and stops.** It will not fill the gap with
-assumptions about PeoplesHR behaviour. That is the point of the skill: an answer you
-can act on, or an honest blank.
+**When WeKnora has nothing, it says so and stops**, and never invents product
+behaviour. A BA's output becomes a requirement someone builds, so a confident guess
+here is expensive.
 
-#### What `phx-product-context` needs from you
+#### What `phx-business-context` needs from you
 
-One environment variable: `WEKNORA_MCP_TOKEN`, the bearer token for the `weknora`
-MCP server. It is **one shared token for the whole team**, handed out through your
-credential channel — your password manager or IT onboarding. It is not in this
-repo, which is public, and must never be committed, pasted into a chat, or typed
-into a Claude conversation. Ask PeoplesHR &lt;sanuja.a@peopleshr.com&gt; if you do
-not have it.
-
-On Windows, prompt for it rather than using `setx`, which would put the token in
-your PowerShell history and in `argv`:
-
-```powershell
-$s = Read-Host -AsSecureString 'WEKNORA_MCP_TOKEN'
-[Environment]::SetEnvironmentVariable('WEKNORA_MCP_TOKEN',
-  [Runtime.InteropServices.Marshal]::PtrToStringBSTR(
-    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)), 'User')
-```
-
-That keeps the value out of history and argv. It is not a secret store: Windows
-keeps user environment variables as plaintext in `HKCU\Environment`, the same
-exposure `PHX_DB_CONNECTION_STRING` already has here. On macOS/Linux, `export` it
-from your shell profile with the profile file at mode `600`.
-
-> ⚠️ **Then restart Claude Code — and only then.** Windows reads user environment
-> variables at process start, so a terminal or Claude Code already running when you
-> set the variable will never see it. A correctly installed token therefore presents
-> exactly as a broken one: an empty `$env:WEKNORA_MCP_TOKEN` and a missing-variable
-> warning for `weknora` in `claude mcp list`. Check
-> `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the
-> registry, not the process — before concluding anything is wrong.
-
-Full prerequisites and troubleshooting:
-[`plugins/org-standards/skills/phx-product-context/INSTALL.md`](../plugins/org-standards/skills/phx-product-context/INSTALL.md).
+The same `WEKNORA_MCP_TOKEN` described under
+[`phx-product-context`](#what-phx-product-context-needs-from-you) in `dev-kit`,
+set the same way — and the same restart afterwards. Full prerequisites:
+[`plugins/org-standards/skills/phx-business-context/INSTALL.md`](../plugins/org-standards/skills/phx-business-context/INSTALL.md).
 
 ---
 
@@ -576,8 +695,8 @@ A remote `type: "http"` MCP server on the WeKnora VM
 (`https://weknora.phrsandbox.dev/mcp`), behind the same nginx as the WeKnora web
 app. Nothing is downloaded and nothing runs locally — installing the plugin and
 setting `WEKNORA_MCP_TOKEN` is the whole client side. It backs
-`phx-product-context` (and `phx-business-context` in `ba-kit`); you are not expected
-to call its tools by hand.
+`phx-business-context` here (and `phx-product-context` in `dev-kit`); you are not
+expected to call its tools by hand.
 
 **It is read-only, but not obviously so.** `tools/list` advertises all 28 WeKnora
 tools, writes included — the tool list takes no notice of the credential behind it.
@@ -628,49 +747,91 @@ pinning a specific version via `PHX_DBEXPLORER_VERSION`.
 
 ---
 
-### `ba-kit` — PeoplesHR product knowledge for Business Analysts
+### `ba-kit` — PeoplesHR tooling for Business Analysts
 
 | Skill | Use it for |
 | --- | --- |
-| `phx-business-context` | Answering **how a PeoplesHR module works** in business terms — module behaviour, user flows, configuration and the rules behind them — grounded in the product documentation held in WeKnora and citing the documents used. Needs `WEKNORA_MCP_TOKEN`. |
+| `phx-write-frd` | Writing the **Feature Requirements Document** (`FRD-`) for a feature — the business/functional document the whole delivery hangs off. Reads the template and sample live from the PHR-X wiki every run, and never invents a metric, persona, priority or acceptance criterion. Needs an Azure DevOps MCP server (see below). |
 
 | MCP server | Use it for |
 | --- | --- |
-| `weknora` | The same read-only WeKnora retrieval server described [above](#weknora--peopleshr-knowledge-retrieval). |
+| `weknora` | Declared here for the BA skills that will land in this plugin. Nothing in `ba-kit` calls it today — `phx-business-context`, which does, lives in `org-standards`. |
+| *(not shipped)* | `phx-write-frd` needs your own Azure DevOps MCP server, which no `phr-foundry` plugin has ever shipped. |
 
-#### What `phx-business-context` does
+> **`ba-kit` was empty between `2.0.0` and `2.1.0`.** `phx-business-context` moved
+> out to
+> [`org-standards`](#org-standards--peopleshr-product-knowledge-for-business-analysts)
+> in `2.0.0`, leaving a reserved slot; `2.1.0` fills it with `phx-write-frd`.
+> **Business Analysts install both plugins** — they do not compete, because only
+> product-knowledge skills misroute against each other and `phx-write-frd` is not
+> one.
+
+#### What `phx-write-frd` does
+
+Authors the **FRD — Feature Requirements Document**, the business/functional
+document for a PeoplesHR feature (`FRD-` prefix). Drafted by the Business Analyst,
+accountable to the Product Owner, consulted by the Solutioning Engineer. Its
+technical companion is the SDD, which `dev-kit`'s
+[`phx-write-sdd`](#what-phx-write-sdd-does) writes.
+
+**The template is not in the plugin.** The template and the filled sample are read
+live from the PHR-X project wiki on **every run**, through your Azure DevOps MCP
+server. There is no local copy, and no CLI, REST or PAT fallback — so a change to
+the organization's standard reaches everyone the moment it is published, and a run
+that cannot reach the wiki produces nothing rather than working from a remembered
+structure.
+
+#### How to invoke it
 
 ```
-/ba-kit:phx-business-context
+/ba-kit:phx-write-frd
 ```
 
-As with the developer skill, you will rarely type that — it fires on its own
-whenever PeoplesHR or one of its modules comes up while you write requirements,
-design a solution, answer a client question or explain how something works. It skips
-itself for work with no PeoplesHR behaviour in it: formatting, summarising your own
-text, general writing help.
+Or just describe it — *"write an FRD for the leave-encashment feature"*. It also
+fires at the end of a requirements or grilling session when you ask for the
+discussion to be written up, captured, or turned into an FRD: the session
+transcript, and any ADRs or `CONTEXT.md` it produced, are legitimate input.
 
-It builds a real search query from the module and business process in play — *"how
-does this work for part timers"* becomes *"leave entitlement proration part-time
-employees"* — then leads with the `PeoplesHR Academy` knowledge base, which
-describes how the product actually behaves for a user, and uses `Product
-Development` for the intent and rules behind it. That is the **opposite** order to
-the developer skill, and the reason the two must not be installed together.
+#### What `phx-write-frd` needs from you
 
-**What you get back.** A business answer — what the user sees, the process, the
-rules, the configuration — with no code or schemas unless you ask, and the WeKnora
-documents cited by title.
+**The first thing it does is ask.** It reads the wiki template, maps what you have
+supplied onto the template's sections, and comes back with **one consolidated
+question** listing every section it has no input for — by number. It waits for your
+answers before drafting anything, rather than drafting the covered half and asking
+about the rest.
 
-**When WeKnora has nothing, it says so and stops**, and never invents product
-behaviour. A BA's output becomes a requirement someone builds, so a confident guess
-here is expensive.
+Expect to be asked for **Document Control** in particular: the FRD ID
+(`FRD-<MODULE>-<YYYY>-<NNN>`), feature name, BA and Product Owner names, version,
+roadmap or epic reference, the linked SDD, and the target wiki path. A design
+session never states these. It will not allocate the next document number for you.
 
-#### What `phx-business-context` needs from you
+A caution worth knowing about: in a grilling session the skill proposes a
+recommended answer to every question and you accept, reject or reshape it. **Only
+your answer is input.** A recommendation left unanswered when the session moved on
+is still a guess, and promoting it into the FRD would launder a suggestion into a
+requirement — FRD acceptance criteria become TDD test cases, so a target nobody
+agreed to gets built against.
 
-The same `WEKNORA_MCP_TOKEN` described under
-[`phx-product-context`](#what-phx-product-context-needs-from-you), set the same way
-— and the same restart afterwards. Full prerequisites:
-[`plugins/ba-kit/skills/phx-business-context/INSTALL.md`](../plugins/ba-kit/skills/phx-business-context/INSTALL.md).
+#### What you get back
+
+A **markdown file in your repository** — `docs/frd/<FRD-ID>-<kebab-case-feature-name>.md`
+by convention, or wherever your repo already keeps FRDs. Not a wall of text in the
+chat: a 16-section document pasted into a conversation cannot be reviewed, diffed
+or version-controlled.
+
+**Writing the file is not publishing.** Nothing reaches the wiki until you ask for
+it explicitly, and even then the skill shows you the exact path and content and
+stops for your approval before any write — a wiki page is visible to the whole
+organization the moment it lands.
+
+It stays on the business side of the line: §9 records the *business need* for each
+cross-module touchpoint and deliberately leaves the mechanism open, and §8 is data
+in business terms. Direct DB access vs. internal API vs. ADAB, and table and column
+names, are the SDD's call. Every §9 touchpoint you write becomes a row the SDD must
+resolve.
+
+Full prerequisites and troubleshooting:
+[`plugins/ba-kit/skills/phx-write-frd/INSTALL.md`](../plugins/ba-kit/skills/phx-write-frd/INSTALL.md).
 
 ---
 
@@ -682,9 +843,15 @@ The same `WEKNORA_MCP_TOKEN` described under
 | Slash command not found after install | Run `/reload-plugins`, or restart the session. |
 | `/org-standards:hrm-deployment-script`, `:hrm-notification`, `:phx-debugger` or `:hrm-configuration-document` not found | Those four moved to `dev-kit` in `org-standards` `3.0.0`. Run `claude plugin install dev-kit@phr-foundry` and use the `/dev-kit:` prefix. |
 | `/org-standards:phx-sql-standards-review` not found, or `phx-dbexplorer` gone after an update | Both moved to `dba-kit` in `org-standards` `4.0.0`. Run `claude plugin install dba-kit@phr-foundry`, use the `/dba-kit:` prefix, and restart Claude Code so the MCP server re-registers. |
+| `/org-standards:phx-product-context` not found after an update | It moved to `dev-kit` in `org-standards` `5.0.0`. Run `claude plugin install dev-kit@phr-foundry`, use `/dev-kit:phx-product-context`, and uninstall `org-standards` — it now ships the BA skill and must not sit alongside `dev-kit`. |
+| `/ba-kit:phx-business-context` not found after an update | It moved to `org-standards` in `ba-kit` `2.0.0`. Run `claude plugin install org-standards@phr-foundry` and use `/org-standards:phx-business-context`. `ba-kit` now ships `phx-write-frd` instead — keep both installed. |
 | An expected fix isn't there after updating | The maintainer likely didn't bump `version` in `plugin.json`. Commits alone don't ship. |
 | Skill behaves oddly when copied by hand | Don't copy `SKILL.md` on its own — the skill needs its whole folder including `references/`. Install via the marketplace instead. |
-| `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback, and `dev-kit` ships no MCP servers. |
+| `phx-debugger` stops saying it needs the Azure DevOps MCP server | You have not added an ADO MCP server, or have not restarted Claude Code since. Check `/mcp`. This is by design — the skill has no non-MCP fallback, and the only MCP server `dev-kit` declares is `weknora`. |
+| `phx-write-sdd` or `phx-write-frd` stops saying it cannot read the template | Same cause and same fix as the row above — both read the template live from the PHR-X wiki through your own ADO MCP server, and neither has a local copy to fall back on. If the error is a 403 rather than a missing server, your account has no PHR-X wiki access; if it is a 404, the template page has moved and you need to give the skill its new location. |
+| `phx-write-sdd` or `phx-write-frd` comes back with a long list of questions instead of a document | Working as designed — those are template sections it has no input for. Answer them and it carries on. It will not fill them with guesses, or file them as "Open Questions" and deliver anyway. |
+| A document was written but the wiki page never appeared | Working as designed — writing the repo file is not publishing. Ask for it to be published explicitly; the skill will show you the exact path and content and stop for approval first. |
+| `phx-write-sdd` refuses to write §5 | It needs the linked FRD. §5 resolves the FRD's cross-module touchpoints into technical decisions, and it will not reconstruct them from the feature description. |
 | `phx-debugger` stops saying it needs Superpowers | Run `/plugin install superpowers@claude-plugins-official` and restart. |
 | A notification mails the same row on every scheduler pass | The four views' `WHERE` clauses have drifted, so the `_UPD` view never returns the row and the claim column is never stamped. Run the predicate check in `hrm-notification`'s verification step. |
 | A notification arrives with empty merge fields | Same cause — the row is in `_PEN` but not in `_DAT`. Compare the four `WHERE` clauses; they must be byte-identical. |
@@ -694,7 +861,7 @@ The same `WEKNORA_MCP_TOKEN` described under
 | `build_docx.py` fails with `No module named 'docx'` | Run `python -m pip install --user python-docx`. |
 | The PDF step reports "Microsoft Word is not available" | `export_pdf.ps1` needs Word on Windows. Open the `.docx`, update fields (Ctrl+A, F9) and save as PDF manually. |
 | The table of contents or page numbers are blank in the `.docx` | Fields are not refreshed until Word updates them. Run `export_pdf.ps1`, or press Ctrl+A, F9 in Word. |
-| `hrm-notification` or `hrm-deployment-script` has no database to inspect | `dev-kit` declares no MCP servers. Install `dba-kit` too — it declares `phx-dbexplorer` — and set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING`. |
+| `hrm-notification` or `hrm-deployment-script` has no database to inspect | `dev-kit` declares no database MCP server. Install `dba-kit` too — it declares `phx-dbexplorer` — and set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING`. |
 | `phx-dbexplorer` tool calls fail with a config error | Set `PHX_DB_TYPE` and `PHX_DB_CONNECTION_STRING` in your shell before starting Claude Code — they're per-developer and not shipped with the plugin. |
 | `/mcp` shows `phx-dbexplorer` failing to reconnect (`-32000`) | Usually an invalid `PHX_DB_TYPE` (e.g. `MSSQLDB` for SQL Server) — the server rejects anything other than `mssql`/`sqlserver` or `postgres`/`postgresql` and exits immediately. Fix the value and fully restart Claude Code (env var changes aren't picked up by an already-running session). |
 | `claude mcp list` warns that `WEKNORA_MCP_TOKEN` is missing | Either it is genuinely unset, or this session started before you set it. Check `[Environment]::GetEnvironmentVariable('WEKNORA_MCP_TOKEN','User')` — the registry, not `$env:` — then fully restart Claude Code. |
@@ -702,7 +869,7 @@ The same `WEKNORA_MCP_TOKEN` described under
 | WeKnora returns `503` with a JSON body | The WeKnora VM is in maintenance mode. Nothing to fix client-side; try again shortly. |
 | A WeKnora search returns an error but the server is reachable | The token is fine — authentication and authorisation fail at different layers here. The knowledge-base name or the server-side API key's scope is the issue. Report it rather than retrying with different wording. |
 | Claude tries to create or delete something in WeKnora and is refused `403` | Expected. The MCP server advertises all 28 tools, but the API key behind it is `retrieve`-only. Nothing can be written to WeKnora from Claude. |
-| Both `phx-product-context` and `phx-business-context` appear in your skill list | You have `org-standards` and `ba-kit` installed together. They misroute — uninstall the one that isn't your role. |
+| Both `phx-product-context` and `phx-business-context` appear in your skill list | You have `dev-kit` and `org-standards` installed together. They misroute — uninstall the one that isn't your role (developers keep `dev-kit`). |
 | `phx-dbexplorer` fails to start with "No releases found" | The upstream repo has no tagged release yet, or `PHX_DBEXPLORER_VERSION` points at a tag that doesn't exist. Check [its Releases page](https://github.com/hsenidBiz/phx-dbexplorer/releases). |
 
 ## Reporting a problem

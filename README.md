@@ -15,9 +15,10 @@ and the plugins it distributes (`plugins/`).
 ├── .claude-plugin/
 │   └── marketplace.json          # Catalog: lists every plugin and its source
 ├── plugins/
-│   ├── dev-kit/                  # Developer build tooling — skills only, no MCP servers
+│   ├── dev-kit/                  # Developer tooling — build skills + developer product knowledge
 │   │   ├── .claude-plugin/
-│   │   │   └── plugin.json       # Manifest (version: 1.0.0 — see Versioning)
+│   │   │   └── plugin.json       # Manifest (version: 2.1.0 — see Versioning); also
+│   │   │                         # declares the weknora MCP server
 │   │   ├── skills/
 │   │   │   ├── hrm-deployment-script/
 │   │   │   │   └── SKILL.md       # PHR SQL deployment-script standards, .NET Framework only
@@ -25,8 +26,12 @@ and the plugins it distributes (`plugins/`).
 │   │   │   │   └── SKILL.md       # Job Scheduler email notifications
 │   │   │   ├── phx-debugger/
 │   │   │   │   └── SKILL.md       # Azure DevOps bug fixing, end to end
-│   │   │   └── hrm-configuration-document/
-│   │   │       └── SKILL.md       # CR Configuration Document (.md/.docx/PDF)
+│   │   │   ├── hrm-configuration-document/
+│   │   │   │   └── SKILL.md       # CR Configuration Document (.md/.docx/PDF)
+│   │   │   ├── phx-product-context/
+│   │   │   │   └── SKILL.md       # PeoplesHR product knowledge from WeKnora (developer)
+│   │   │   └── phx-write-sdd/
+│   │   │       └── SKILL.md       # Architecture / Solution Design Document (ARCH-)
 │   │   └── README.md
 │   ├── dba-kit/                  # Database tooling for DBAs
 │   │   ├── .claude-plugin/
@@ -36,20 +41,20 @@ and the plugins it distributes (`plugins/`).
 │   │   │   └── phx-sql-standards-review/
 │   │   │       └── SKILL.md       # Review-only OLD/NEW SQL standards sign-off
 │   │   └── README.md
-│   ├── org-standards/            # Product-knowledge plugin
+│   ├── org-standards/            # BA product-knowledge plugin — never install with dev-kit
 │   │   ├── .claude-plugin/
-│   │   │   └── plugin.json       # Manifest (version: 4.0.0 — see Versioning); also
+│   │   │   └── plugin.json       # Manifest (version: 5.0.0 — see Versioning); also
 │   │   │                         # declares the weknora MCP server
 │   │   ├── skills/
-│   │   │   └── phx-product-context/
-│   │   │       └── SKILL.md       # PeoplesHR product knowledge from WeKnora (developer)
+│   │   │   └── phx-business-context/
+│   │   │       └── SKILL.md       # PeoplesHR product knowledge from WeKnora (BA)
 │   │   └── README.md
-│   └── ba-kit/                   # Business Analyst plugin — never install with org-standards
+│   └── ba-kit/                   # Business Analyst tooling — the FRD authoring skill
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Manifest (version: 1.0.0); declares the weknora MCP server
+│       │   └── plugin.json       # Manifest (version: 2.1.0); declares the weknora MCP server
 │       ├── skills/
-│       │   └── phx-business-context/
-│       │       └── SKILL.md       # PeoplesHR product knowledge from WeKnora (BA)
+│       │   └── phx-write-frd/
+│       │       └── SKILL.md       # Feature Requirements Document (FRD-)
 │       └── README.md
 ├── .github/
 │   └── workflows/
@@ -68,8 +73,8 @@ the rule for deciding where a new thing goes, and it is not negotiable:
 | --- | --- | --- |
 | `dev-kit` | Developers only | Skills and MCP servers no other role would ever invoke |
 | `dba-kit` | DBAs only | Same test, for database work — SQL review and schema browsing |
-| `ba-kit` | Business Analysts only | Same test, for BAs |
-| `org-standards` | **Everyone** | Only what every role can use, whatever their job |
+| `ba-kit` | Business Analysts only | Same test, for BAs — the FRD authoring skill, `phx-write-frd` |
+| `org-standards` | Business Analysts | The BA product-knowledge skill, `phx-business-context` |
 
 A new domain gets its **own** plugin under `plugins/`, never a corner of an existing
 one. The test is *who would ever invoke this* — not which plugin already declares the
@@ -78,17 +83,18 @@ server sits elsewhere. When a server is genuinely needed by two audiences — `w
 today — each plugin that needs it declares it; the duplicate declarations resolve to
 one server at run time and are the intended cost of clean boundaries.
 
-> **The repo predates this rule and does not fully comply yet.**
-> `phx-sql-standards-review` and `phx-dbexplorer` were realigned out of
-> `org-standards` into `dba-kit` in `org-standards` `4.0.0`. `phx-product-context`
-> is still developer-only but remains in `org-standards` — moving it breaks
-> slash-command prefixes for everyone already using it. The rule governs
-> **additions**; realigning what is left is a deliberate, separately-agreed
-> change. See [`CLAUDE.md`](CLAUDE.md#rules).
+> **`org-standards` no longer means "everyone".** It was realigned in `5.0.0`:
+> `phx-product-context` moved to `dev-kit`, where its developer-only audience
+> belongs, and `phx-business-context` moved in from `ba-kit`. `org-standards` is
+> now the Business Analyst home for *product knowledge*, while `ba-kit` holds the
+> BA's own tooling — `phx-write-frd` since `2.1.0`. A Business Analyst installs
+> both. The consequence is that the never-install-together pair is now **`dev-kit`
+> and `org-standards`**. See [`CLAUDE.md`](CLAUDE.md#rules).
 
 ## What's in `dev-kit`
 
-The hands-on build skills. Three skills, **no MCP servers** — see
+The hands-on build skills, the developer product-knowledge skill and the solution
+design authoring skill. Six skills and one MCP server — see
 [`plugins/dev-kit/README.md`](plugins/dev-kit/README.md) for what each one wants
 from your environment.
 
@@ -98,16 +104,35 @@ from your environment.
 | **This repo (own skill)** | `hrm-notification` | Builds a module email notification on the `HRM-JS45-SERVICE` Job Scheduler — four views, claim column, `HS_HR_JS_*` config rows, HTML template. A notification is **data, not code**. |
 | **This repo (own skill)** | `phx-debugger` | Fixes an Azure DevOps bug end to end from its bug ID — investigation, fix plan, implementation, RCA, status change. Needs the `superpowers` plugin and a per-developer Azure DevOps MCP server. |
 | **This repo (own skill)** | `hrm-configuration-document` | Writes the organization-standard Configuration Document for a finished CR from developer notes — house `.md`, branded `.docx` and PDF for the SharePoint library. Asks the developer for every missing fact. |
+| **This repo (own skill)** | `phx-product-context` | Grounds any answer about PeoplesHR module behaviour in the product documentation held in WeKnora, and cites the documents used. Searches `Product Development` deep and `PeoplesHR Academy` shallow, and answers technically. Needs `WEKNORA_MCP_TOKEN`. |
+| **This repo (own skill)** | `phx-write-sdd` | Authors the **SDD — Architecture / Solution Design Document** (`ARCH-` prefix) against the template and sample read live from the PHR-X project wiki on every run. Resolves every cross-module touchpoint the linked FRD left open into a technical decision. Never invents a table, column, endpoint or name — it stops and asks. Needs a per-developer Azure DevOps MCP server. |
+| **Remote server on the WeKnora VM** | `weknora` (MCP server) | Read-only retrieval from the `Product Development` and `PeoplesHR Academy` knowledge bases at `https://weknora.phrsandbox.dev/mcp`. A `type: "http"` server — nothing is downloaded or run locally. Read-only is enforced by a `retrieve`-only API key on the server, not by the advertised tool list. |
 
-These four shipped in `org-standards` up to `2.11.1` and moved here in
-`org-standards` `3.0.0`. Nothing about the skills themselves changed — only the
-slash-command prefix, from `/org-standards:` to `/dev-kit:`.
+The first four shipped in `org-standards` up to `2.11.1` and moved here in
+`org-standards` `3.0.0`. `phx-product-context` moved here in `org-standards`
+`5.0.0` / `dev-kit` `2.0.0`. Nothing about any of the skills themselves changed —
+only the slash-command prefix, from `/org-standards:` to `/dev-kit:`.
+`phx-write-sdd` is new in `dev-kit` `2.1.0`.
 
-`dev-kit` declares no MCP servers of its own. `hrm-notification` and
-`hrm-deployment-script` are much more useful with a database to inspect, which is
-what `dba-kit`'s `phx-dbexplorer` gives them — so install both plugins if you
-want that. `phx-debugger`'s Azure DevOps server was always yours to add and still
-is.
+`hrm-notification` and `hrm-deployment-script` are much more useful with a
+database to inspect, which is what `dba-kit`'s `phx-dbexplorer` gives them — so
+install both plugins if you want that. The Azure DevOps server that `phx-debugger`
+and `phx-write-sdd` both need was always yours to add and still is — it is the
+same server for both. `phx-write-sdd`'s business companion, `phx-write-frd`, ships
+in `ba-kit`; see [Installing as a Business
+Analyst](#installing-as-a-business-analyst).
+
+> ⚠️ **Install `dev-kit` or `org-standards`, never both** — see the warning under
+> [What's in `org-standards`](#whats-in-org-standards) below.
+>
+> **Before `weknora` will work**, you must set `WEKNORA_MCP_TOKEN` in your own
+> environment — one token shared by the whole team, handed out through your
+> credential channel and **never committed to this public repo**. Set it and
+> **then** restart Claude Code: Windows reads user environment variables at
+> process start, so a session that was already running reports a
+> missing-variable warning for `weknora` even though the token is stored
+> correctly. See
+> [`INSTALL.md`](plugins/dev-kit/skills/phx-product-context/INSTALL.md).
 
 ## What's in `dba-kit`
 
@@ -139,12 +164,28 @@ from `/org-standards:phx-sql-standards-review` to
 
 ## What's in `org-standards`
 
-The product-knowledge half. One skill of its own, plus one MCP server.
+**The Business Analyst plugin.** One skill of its own, plus one MCP server.
 
 | Source | Skill / MCP server | Notes |
 | --- | --- | --- |
-| **This repo (own skill)** | `phx-product-context` | Grounds any answer about PeoplesHR module behaviour in the product documentation held in WeKnora, and cites the documents used. Searches `Product Development` deep and `PeoplesHR Academy` shallow, and answers technically. Needs `WEKNORA_MCP_TOKEN`. |
+| **This repo (own skill)** | `phx-business-context` | Answers PeoplesHR questions in business terms — what the user sees, the process, the rules and the configuration — grounded in the product documentation held in WeKnora, and citing the documents used. Searches `PeoplesHR Academy` deep and `Product Development` shallow. Needs `WEKNORA_MCP_TOKEN`. |
 | **Remote server on the WeKnora VM** | `weknora` (MCP server) | Read-only retrieval from the `Product Development` and `PeoplesHR Academy` knowledge bases at `https://weknora.phrsandbox.dev/mcp`. A `type: "http"` server — nothing is downloaded or run locally. Read-only is enforced by a `retrieve`-only API key on the server, not by the advertised tool list. |
+
+`phx-business-context` moved here from `ba-kit` in `org-standards` `5.0.0`, at
+the same time `phx-product-context` moved out to `dev-kit`. The skill itself is
+unchanged — only the prefix, from `/ba-kit:` to `/org-standards:`.
+
+> ⚠️ **Install `org-standards` or `dev-kit`, never both.**
+> `phx-business-context` and `phx-product-context` search the same two knowledge
+> bases in opposite orders and answer in different voices. With both present they
+> compete on question wording and misroute. Business Analysts take
+> `org-standards`; developers take `dev-kit`; anyone genuinely doing both jobs
+> takes `dev-kit`, whose developer skill keeps the business rationale as a
+> secondary.
+>
+> This applies **only** to that pair. `dba-kit` and `ba-kit` ship no
+> product-knowledge skill, so both are safe alongside either one — a BA who also
+> writes deployment SQL can take `org-standards` + `dba-kit`.
 
 > **Before `weknora` will work**, you must set `WEKNORA_MCP_TOKEN` in your own
 > environment — one token shared by the whole team, handed out through your
@@ -153,7 +194,7 @@ The product-knowledge half. One skill of its own, plus one MCP server.
 > process start, so a session that was already running reports a
 > missing-variable warning for `weknora` even though the token is stored
 > correctly. See
-> [`INSTALL.md`](plugins/org-standards/skills/phx-product-context/INSTALL.md).
+> [`INSTALL.md`](plugins/org-standards/skills/phx-business-context/INSTALL.md).
 
 We do not bundle third-party *plugins* as `dependencies` — Claude Code only auto-resolves a
 cross-marketplace dependency if the user has already added that dependency's marketplace,
@@ -168,12 +209,12 @@ all — it's a plain MCP server binary fetched via `npx`.)
 > **[usage guide](docs/USAGE.md)** — install, update, and how to drive each skill.
 
 Point Claude Code at the GitHub repo, then install the plugins. Most developers
-want `dev-kit`, `org-standards` and `dba-kit`:
+want `dev-kit` and `dba-kit` — **not** `org-standards`, which is the Business
+Analyst plugin and conflicts with `dev-kit`:
 
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
 claude plugin install dev-kit@phr-foundry
-claude plugin install org-standards@phr-foundry
 claude plugin install dba-kit@phr-foundry
 ```
 
@@ -183,8 +224,12 @@ Each skill is namespaced under its **own** plugin, so invoke it with:
 /dev-kit:hrm-deployment-script
 /dev-kit:hrm-notification
 /dev-kit:phx-debugger <bug-id>
+/dev-kit:hrm-configuration-document
+/dev-kit:phx-product-context
+/dev-kit:phx-write-sdd
 /dba-kit:phx-sql-standards-review
-/org-standards:phx-product-context
+/org-standards:phx-business-context
+/ba-kit:phx-write-frd
 ```
 
 Claude also loads a skill automatically when its `description` matches the
@@ -206,43 +251,49 @@ add it to that project's `.claude/settings.json`:
   },
   "enabledPlugins": {
     "dev-kit@phr-foundry": true,
-    "org-standards@phr-foundry": true,
     "dba-kit@phr-foundry": true
   }
 }
 ```
 
-## `ba-kit` — the Business Analyst plugin
+## Installing as a Business Analyst
 
-Business Analysts install `ba-kit` instead of `org-standards`:
+Business Analysts install `org-standards` instead of `dev-kit`:
 
 ```shell
 claude plugin marketplace add https://github.com/hsenidBiz/phr-foundry
+claude plugin install org-standards@phr-foundry
+```
+
+That gives you `phx-business-context` and the `weknora` MCP server — see
+[What's in `org-standards`](#whats-in-org-standards) above and
+[`plugins/org-standards/README.md`](plugins/org-standards/README.md). You also
+need `WEKNORA_MCP_TOKEN`.
+
+**Install `ba-kit` as well.** It was an empty reserved slot from `2.0.0`, when
+`phx-business-context` moved out of it into `org-standards`, until `2.1.0` filled
+it with `phx-write-frd` — the skill that authors the **FRD — Feature Requirements
+Document** against the template held in the PHR-X project wiki:
+
+```shell
 claude plugin install ba-kit@phr-foundry
 ```
 
-It ships one skill, `phx-business-context`, and the same `weknora` MCP server.
-The skill answers PeoplesHR questions in business terms — what the user sees, the
-process, the rules and the configuration — leading with the `PeoplesHR Academy`
-knowledge base and using `Product Development` for the intent behind it. It also
-needs `WEKNORA_MCP_TOKEN`. See
-[`plugins/ba-kit/README.md`](plugins/ba-kit/README.md).
+The two do not compete: only product-knowledge skills misroute against each
+other, and `phx-write-frd` is not one. It needs your **own** per-developer Azure
+DevOps MCP server — the FRD template lives in the wiki and there is no local copy.
+See [`plugins/ba-kit/README.md`](plugins/ba-kit/README.md) and
+[`INSTALL.md`](plugins/ba-kit/skills/phx-write-frd/INSTALL.md).
 
-> ⚠️ **Install `ba-kit` or `org-standards`, never both.**
-> `phx-business-context` and `phx-product-context` search the same two knowledge
-> bases in opposite orders and answer in different voices. With both present they
-> compete on question wording and misroute. Anyone genuinely doing both jobs takes
-> `org-standards`, whose developer skill keeps the business rationale as a
-> secondary.
->
-> This applies **only** to that pair. `dev-kit` and `dba-kit` ship no
-> product-knowledge skill, so both are safe alongside either one — a BA who also
-> writes deployment SQL can take `ba-kit` + `dev-kit` + `dba-kit`.
+`phx-write-frd`'s technical companion, `phx-write-sdd`, ships in `dev-kit` — the
+SDD is the Solutioning Engineer's document, not the BA's. A BA does **not** install
+`dev-kit` for it; that would pull in `phx-product-context` and misroute against
+`phx-business-context`.
 
 ## Versioning: manual semver in `plugin.json`
 
 Each plugin declares an explicit `version` in its `plugin.json` (`dev-kit` is at
-`1.0.0`, `org-standards` at `4.0.0`, `ba-kit` at `1.0.0`, `dba-kit` at `1.0.0`). Claude Code resolves a
+`2.1.0`, `org-standards` at `5.0.0`, `ba-kit` at `2.1.0`, `dba-kit` at `1.0.0`). Claude Code resolves a
 plugin's version from the first of these that is set:
 
 1. `version` in the plugin's `plugin.json` ← **we use this**
@@ -265,8 +316,8 @@ From the directory that **contains** this repository, start Claude Code and run:
 ```shell
 /plugin marketplace add ./PHR-Foundry
 /plugin install dev-kit@phr-foundry
-/plugin install org-standards@phr-foundry
 /plugin install dba-kit@phr-foundry
+/plugin install ba-kit@phr-foundry
 /reload-plugins
 ```
 
