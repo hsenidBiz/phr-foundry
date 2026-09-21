@@ -1,10 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "dev-kit",
-  "version": "1.0.0",
-  "description": "PeoplesHR developer build tooling. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, and the hrm-configuration-document skill for writing the house Configuration Document (.md, .docx, PDF) for a finished CR. Declares no MCP servers of its own.",
+  "version": "2.1.0",
+  "description": "PeoplesHR developer build tooling. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, the hrm-configuration-document skill for writing the house Configuration Document (.md, .docx, PDF) for a finished CR, the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, and the phx-write-sdd skill for authoring the Architecture / Solution Design Document (SDD) against the template held in the PHR-X project wiki. Declares the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. phx-product-context moved here from org-standards in 2.0.0.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
+  },
+  "mcpServers": {
+    "weknora": {
+      "type": "http",
+      "url": "https://weknora.phrsandbox.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${WEKNORA_MCP_TOKEN}"
+      }
+    }
   }
 }

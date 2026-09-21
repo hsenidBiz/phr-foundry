@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ba-kit",
-  "version": "1.0.0",
-  "description": "PeoplesHR product knowledge for Business Analysts. Ships the phx-business-context skill, which retrieves module behaviour, user flows and product documentation from WeKnora through the weknora MCP server when working on requirements, solutions or client questions.",
+  "version": "2.1.0",
+  "description": "PeoplesHR tooling for Business Analysts. Ships the phx-write-frd skill for authoring the Feature Requirements Document (FRD) against the template held in the PHR-X project wiki, and declares the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. phx-write-frd needs a per-developer Azure DevOps MCP server, which this plugin does not ship. phx-business-context moved to the org-standards plugin in 2.0.0.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"

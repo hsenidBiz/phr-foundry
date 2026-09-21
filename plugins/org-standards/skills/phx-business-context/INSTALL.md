@@ -1,4 +1,4 @@
-# `phx-product-context` — prerequisites
+# `phx-business-context` — prerequisites
 
 The skill ships with `org-standards`. What it needs and the plugin deliberately does
 **not** ship is one per-person credential: the WeKnora MCP bearer token.
@@ -62,10 +62,10 @@ The last row is the one that misleads: the bearer token gets you to the MCP serv
 separate read-only API key on the server decides what it may do. A failing **search** is
 almost never the token.
 
-## Do not install the BA skill alongside this one
+## Do not install the developer skill alongside this one
 
-`phx-business-context`, in the `ba-kit` plugin, searches the same two knowledge bases in the
-opposite order and answers in business rather than technical terms. The two compete on
-question wording and misroute if both are present. Developers install `org-standards` only.
-Anyone genuinely doing both jobs takes this skill, which keeps the business rationale as a
-secondary.
+`phx-product-context`, in the `dev-kit` plugin, searches the same two knowledge bases
+in the opposite order and answers in technical rather than business terms. The two compete on
+question wording and misroute if both are present. BAs install `org-standards` only (never alongside `dev-kit`). Anyone
+genuinely doing both jobs takes the developer skill instead, which keeps the business
+rationale as a secondary.

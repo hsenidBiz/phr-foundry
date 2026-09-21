@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "org-standards",
-  "version": "4.0.0",
-  "description": "PeoplesHR organization standards for Claude Code. Ships the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hrm-deployment-script, hrm-notification, phx-debugger and hrm-configuration-document skills moved to the dev-kit plugin in 3.0.0; the phx-sql-standards-review skill and the phx-dbexplorer MCP server moved to the dba-kit plugin in 4.0.0.",
+  "version": "5.0.0",
+  "description": "PeoplesHR organization standards for Claude Code. Ships the phx-business-context skill, which retrieves PeoplesHR module behaviour, user flows and product documentation from WeKnora in business terms, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hrm-deployment-script, hrm-notification, phx-debugger and hrm-configuration-document skills moved to the dev-kit plugin in 3.0.0; the phx-sql-standards-review skill and the phx-dbexplorer MCP server moved to the dba-kit plugin in 4.0.0; phx-product-context moved to dev-kit in 5.0.0, which is also when phx-business-context arrived here from ba-kit.",
   "author": {
     "name": "PeoplesHR",
     "email": "sanuja.a@peopleshr.com"
