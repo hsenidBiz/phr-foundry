@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "dev-kit",
+  "version": "1.0.0",
+  "description": "PeoplesHR developer build tooling. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, and the hrm-configuration-document skill for writing the house Configuration Document (.md, .docx, PDF) for a finished CR. Declares no MCP servers of its own.",
+  "author": {
+    "name": "PeoplesHR",
+    "email": "sanuja.a@peopleshr.com"
+  }
+}

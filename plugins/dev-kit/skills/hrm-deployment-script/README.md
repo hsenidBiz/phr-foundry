@@ -6,14 +6,14 @@ deployment scaffolding, registers new root scripts in `dep.xml`, handles request
 localization, and performs PR-readiness checks. Supplied SQL is preserved exactly —
 the skill never enhances, optimizes, or reformats it.
 
-This skill ships inside the **`org-standards`** plugin, distributed via the
+This skill ships inside the **`dev-kit`** plugin, distributed via the
 **`phr-foundry`** marketplace. Install and invoke it through Claude Code:
 
 ```shell
-/plugin install org-standards@phr-foundry
+/plugin install dev-kit@phr-foundry
 ```
 
-Invoke explicitly with `/org-standards:hrm-deployment-script`, or let Claude load it
+Invoke explicitly with `/dev-kit:hrm-deployment-script`, or let Claude load it
 automatically when you create, convert, or review HRM-DB deployment SQL. Do not copy
 `SKILL.md` on its own — the skill needs the whole folder, including `references/`.
 
@@ -31,7 +31,7 @@ for all missing items, then proceeds directly — no input-summary or confirmati
 ## Input template
 
 ````text
-Use /org-standards:hrm-deployment-script to create an HRM-DB deployment script.
+Use /dev-kit:hrm-deployment-script to create an HRM-DB deployment script.
 
 User name:
 Feature ID:
@@ -54,7 +54,7 @@ SQL:
 You may begin with only SQL:
 
 ```text
-Use /org-standards:hrm-deployment-script to create a deployment script.
+Use /dev-kit:hrm-deployment-script to create a deployment script.
 
 INSERT INTO HS_FORM_LABEL_MAP (...)
 VALUES (...);

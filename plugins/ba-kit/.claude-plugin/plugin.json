@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ba-kit",
+  "version": "1.0.0",
+  "description": "PeoplesHR product knowledge for Business Analysts. Ships the phx-business-context skill, which retrieves module behaviour, user flows and product documentation from WeKnora through the weknora MCP server when working on requirements, solutions or client questions.",
+  "author": {
+    "name": "PeoplesHR",
+    "email": "sanuja.a@peopleshr.com"
+  },
+  "mcpServers": {
+    "weknora": {
+      "type": "http",
+      "url": "https://weknora.phrsandbox.dev/mcp",
+      "headers": {
+        "Authorization": "Bearer ${WEKNORA_MCP_TOKEN}"
+      }
+    }
+  }
+}
