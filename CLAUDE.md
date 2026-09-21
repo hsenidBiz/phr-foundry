@@ -58,7 +58,7 @@ One repo holds both the catalog and the plugins.
   held nothing but placeholder READMEs.
 
 ## Rules
-- **Version lives in `plugin.json` only** (currently `2.11.0`). Bump the semver on every
+- **Version lives in `plugin.json` only** (currently `2.11.1`). Bump the semver on every
   release — users only receive updates when it changes. Do NOT also set `version` in the
   marketplace entry; when both are set, `plugin.json` silently wins.
 - **Skill names must start with `hrm-` or `phx-` and be kebab-case** — non-negotiable.
