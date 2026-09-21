@@ -9,17 +9,17 @@
     {
       "name": "org-standards",
       "source": "./plugins/org-standards",
-      "description": "PeoplesHR organization standards. Ships the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. The hands-on build skills live in the dev-kit plugin; the SQL standards review and phx-dbexplorer live in the dba-kit plugin."
+      "description": "PeoplesHR organization standards. Ships the phx-business-context skill for answering questions about PeoplesHR module behaviour, user flows and configuration in business terms, grounded in the product documentation held in WeKnora, and the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases. Business Analysts install this; developers install dev-kit instead, never both. The hands-on build skills and phx-product-context live in the dev-kit plugin; the SQL standards review and phx-dbexplorer live in the dba-kit plugin."
     },
     {
       "name": "dev-kit",
       "source": "./plugins/dev-kit",
-      "description": "PeoplesHR developer build tooling. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, and the hrm-configuration-document skill for writing the house Configuration Document (.md, .docx, PDF) for a finished CR. No MCP servers of its own; safe to install alongside org-standards, dba-kit or ba-kit. Install dba-kit for the phx-dbexplorer MCP server if you want schema browsing."
+      "description": "PeoplesHR developer build tooling. Ships the hrm-deployment-script skill for reformatting SQL to PHR conventions in .NET Framework projects, the hrm-notification skill for building a Job Scheduler email notification for any module, the phx-debugger skill for fixing an Azure DevOps bug end to end from its bug ID, the hrm-configuration-document skill for writing the house Configuration Document (.md, .docx, PDF) for a finished CR, and the phx-product-context skill for grounding answers about PeoplesHR module behaviour in the product documentation held in WeKnora. Declares the weknora MCP server. Safe alongside dba-kit or ba-kit, but never install it with org-standards. Install dba-kit for the phx-dbexplorer MCP server if you want schema browsing."
     },
     {
       "name": "ba-kit",
       "source": "./plugins/ba-kit",
-      "description": "PeoplesHR product knowledge for Business Analysts. Automatically retrieves module behaviour, user flows and product documentation from WeKnora when working on requirements, solutions or client questions."
+      "description": "Reserved home for PeoplesHR Business Analyst skills. Ships no skills at present — phx-business-context moved to the org-standards plugin, which is what Business Analysts install. Still declares the weknora MCP server for read-only retrieval from the PeoplesHR knowledge bases."
     },
     {
       "name": "dba-kit",
