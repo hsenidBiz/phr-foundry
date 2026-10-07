@@ -3,14 +3,15 @@
 PeoplesHR tooling for **Business Analysts**, packaged as a Claude Code plugin and
 distributed through the [`phr-foundry`](../../README.md) marketplace.
 
-> **No longer empty.** `ba-kit` shipped no skills between `2.0.0`, when
-> `phx-business-context` moved to the [`org-standards`](../org-standards/README.md)
-> plugin, and `2.1.0`, which fills the reserved slot with `phx-write-frd`.
+> Business Analysts want **both** `ba-kit` and
+> [`org-standards`](../org-standards/README.md): `org-standards` for
+> `/org-standards:phx-product-context`, which grounds PRD / FRD writing and
+> requirement elicitation in the PeoplesHR knowledge bases, and `ba-kit` for
+> `/ba-kit:phx-write-frd`.
 >
-> Business Analysts want **both**: `org-standards` for
-> `/org-standards:phx-business-context`, and `ba-kit` for
-> `/ba-kit:phx-write-frd`. The two do not compete — only product-knowledge skills
-> misroute against each other, and `phx-write-frd` is not one.
+> **Changed in `3.0.0`:** this plugin no longer declares the `weknora` MCP server —
+> nothing here called it. Product knowledge comes from `phx-product-context`, which
+> uses the weknora-peopleshr-product-knowledge server you connect yourself.
 
 ## Skills
 
@@ -34,16 +35,6 @@ Its technical companion, `phx-write-sdd`, ships in
 [`dev-kit`](../dev-kit/README.md) — the SDD is the Solutioning Engineer's
 document, not the BA's.
 
-## MCP servers
-
-| Server    | What it does                                                              |
-| --------- | ------------------------------------------------------------------------- |
-| `weknora` | Read-only retrieval from the `PeoplesHR Academy` and `Product Development` knowledge bases in WeKnora. Declared here for the BA skills that will land in this plugin; nothing in `ba-kit` calls it today. |
-
-It needs `WEKNORA_MCP_TOKEN` in your own environment — a shared token handed out
-through your credential channel, never committed here. Set it, **then** restart
-Claude Code.
-
 ## Install
 
 ```shell
@@ -52,12 +43,11 @@ claude plugin install ba-kit@phr-foundry
 claude plugin install org-standards@phr-foundry
 ```
 
-Safe alongside `dba-kit` too. Do **not** install `dev-kit` and `org-standards`
-together — that is the pair that misroutes.
+Safe alongside every other `phr-foundry` plugin.
 
 ## Notes
 
-- **Versioned by semver** in `plugin.json` (currently `2.1.0`); bump it on each
+- **Versioned by semver** in `plugin.json` (currently `3.0.0`); bump it on each
   release that should reach users. See the root
   [README](../../README.md#versioning-manual-semver-in-pluginjson).
-- One skill and one MCP server: no agents, no hooks.
+- One skill, no MCP server: no agents, no hooks.
